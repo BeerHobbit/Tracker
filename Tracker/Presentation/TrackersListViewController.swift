@@ -75,6 +75,9 @@ final class TrackersListViewController: UIViewController {
         return formatter
     }()
     
+    private var categories: [TrackerCategory] = []
+    private var completedTrackers: [TrackerRecord] = []
+    
     // MARK: - Life Cycle
     
     override func viewDidLoad() {
