@@ -2,18 +2,20 @@ import UIKit
 
 final class TrackersListViewController: UIViewController {
     
-    // MARK: - Views
+    // MARK: - Views and Guides
     
     private let addTrackerButton: UIButton = {
         let button = UIButton()
-        button.setImage(.addTracker, for: .normal)
+        let image = UIImage.addTracker.withRenderingMode(.alwaysTemplate)
+        button.setImage(image, for: .normal)
+        button.tintColor = .ypBlack
         return button
     }()
     
     private let datePickerButton: UIButton = {
         let button = UIButton()
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .regular)
-        button.setTitleColor(.ypBlack, for: .normal)
+        button.setTitleColor(.ypBlack.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light)), for: .normal)
         button.backgroundColor = .datePickerGray
         button.layer.masksToBounds = true
         button.layer.cornerRadius = 8
@@ -65,9 +67,9 @@ final class TrackersListViewController: UIViewController {
         return stackView
     }()
     
-    // MARK: - Private Properties
-    
     private let emptyStateGuide = UILayoutGuide()
+    
+    // MARK: - Private Properties
     
     private lazy var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()

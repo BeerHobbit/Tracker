@@ -7,6 +7,7 @@ final class MainTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         buildTabBarControllers()
+        setupUI()
     }
     
     // MARK: - Private Methods
@@ -29,4 +30,24 @@ final class MainTabBarController: UITabBarController {
         viewControllers = [trackersListVC, statisticsVC]
     }
     
+    private func setupUI() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .ypWhite
+        appearance.shadowColor = .separator
+        
+        appearance.stackedLayoutAppearance.selected.iconColor = .ypBlue
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.ypBlue]
+        
+        appearance.stackedLayoutAppearance.normal.iconColor = .ypGray
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.ypGray]
+        
+        tabBar.standardAppearance = appearance
+        tabBar.scrollEdgeAppearance = appearance
+    }
+    
+}
+
+#Preview {
+    MainTabBarController()
 }
