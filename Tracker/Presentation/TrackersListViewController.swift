@@ -67,6 +67,14 @@ final class TrackersListViewController: UIViewController {
         return stackView
     }()
     
+    private let trackersCollectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.register(TrackerCell.self, forCellWithReuseIdentifier: TrackerCell.reuseID)
+        collectionView.register(TrackerCategoryHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: TrackerCategoryHeader.reuseID)
+        return collectionView
+    }()
+    
     // MARK: - Private Properties
     
     private lazy var dateFormatter: DateFormatter = {
@@ -76,7 +84,27 @@ final class TrackersListViewController: UIViewController {
     }()
     
     private var categories: [TrackerCategory] = []
-    private var visibleCategories: [TrackerCategory] = [] {
+    private var visibleCategories: [TrackerCategory] = [
+        TrackerCategory(
+            title: "Важное",
+            trackers: [
+                Tracker(
+                    id: UUID(),
+                    title: "Помыть посуду",
+                    color: .colorSelection12,
+                    emoji: "🤔",
+                    schedule: [.monday, .tuesday]
+                ),
+                Tracker(
+                    id: UUID(),
+                    title: "Я хочу умереть",
+                    color: .colorSelection6,
+                    emoji: "🥶",
+                    schedule: [.wednesday, .sunday]
+                )
+            ]
+        )
+    ] {
         didSet {
             emptyStateStackView.isHidden = visibleCategories.isEmpty ? true : false
         }
@@ -87,14 +115,23 @@ final class TrackersListViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        configDependencies()
         setupUI()
+    }
+    
+    // MARK: - Configure Dependencies
+    
+    private func configDependencies() {
+        trackersCollectionView.dataSource = self
+        trackersCollectionView.delegate = self
     }
     
     // MARK: - Setup UI
     private func setupUI() {
         view.backgroundColor = .ypWhite
         view.addSubviews([
-            emptyStateStackView
+            emptyStateStackView,
+            trackersCollectionView,
         ])
         
         setupNavigationBar()
@@ -119,7 +156,13 @@ final class TrackersListViewController: UIViewController {
     // MARK: - Setup Constraints
     
     private func setupConstraints() {
-        disableAutoresizingMaskForSubviews()
+        disableAutoresizingMaskForViews([
+            dateContainerView,
+            emptyStateLabel,
+            emptyStateImageView,
+            emptyStateStackView,
+            trackersCollectionView
+        ])
         
         NSLayoutConstraint.activate([
             addTrackerButton.heightAnchor.constraint(equalToConstant: 42),
@@ -128,6 +171,11 @@ final class TrackersListViewController: UIViewController {
             dateContainerView.heightAnchor.constraint(equalToConstant: 34),
             dateContainerView.widthAnchor.constraint(equalToConstant: 77),
             
+            trackersCollectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            trackersCollectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            trackersCollectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            trackersCollectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            
             emptyStateImageView.heightAnchor.constraint(equalToConstant: 80),
             emptyStateImageView.widthAnchor.constraint(equalTo: emptyStateImageView.heightAnchor),
             emptyStateStackView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
@@ -135,16 +183,6 @@ final class TrackersListViewController: UIViewController {
         ])
         datePicker.edgesToSuperview()
         dateLabel.edgesToSuperview()
-    }
-    
-    private func disableAutoresizingMaskForSubviews() {
-        let views = [
-            dateContainerView,
-            emptyStateLabel,
-            emptyStateImageView,
-            emptyStateStackView
-        ]
-        views.forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
     }
     
     // MARK: - Setup Actions
@@ -162,3 +200,35 @@ final class TrackersListViewController: UIViewController {
     
 }
 
+extension TrackersListViewController: UICollectionViewDataSource {
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        let category = visibleCategories[section]
+        return category.trackers.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = trackersCollectionView.dequeueReusableCell(withReuseIdentifier: TrackerCell.reuseID, for: indexPath) as? TrackerCell else { return UICollectionViewCell() }
+        let category = visibleCategories[indexPath.section]
+        let tracker = category.trackers[indexPath.item]
+        
+        cell.convert(from: tracker)
+        return cell
+    }
+    
+}
+
+extension TrackersListViewController: UICollectionViewDelegateFlowLayout {
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 167, height: 148)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 24, left: 16, bottom: 0, right: 16)
+    }
+}
+
+#Preview {
+    MainTabBarController()
+}
