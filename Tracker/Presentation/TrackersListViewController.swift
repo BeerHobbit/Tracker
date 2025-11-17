@@ -12,37 +12,37 @@ final class TrackersListViewController: UIViewController {
         return button
     }()
     
-    private let datePickerButton: UIButton = {
-        let button = UIButton()
-        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .regular)
-        button.setTitleColor(.ypBlack.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light)), for: .normal)
-        button.backgroundColor = .datePickerGray
-        button.layer.masksToBounds = true
-        button.layer.cornerRadius = 8
-        return button
+    private lazy var datePicker: UIDatePicker = {
+        let datePicker = UIDatePicker()
+        datePicker.datePickerMode = .date
+        datePicker.preferredDatePickerStyle = .compact
+        return datePicker
     }()
     
-    private lazy var topElementsStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [addTrackerButton, UIView(), datePickerButton])
-        stackView.axis = .horizontal
-        stackView.alignment = .center
-        stackView.distribution = .fill
-        return stackView
-    }()
-    
-    private let trackersLabel: UILabel = {
+    private lazy var dateLabel: UILabel = {
         let label = UILabel()
-        label.text = "Трекеры"
-        label.font = .systemFont(ofSize: 34, weight: .bold)
-        label.textColor = .ypBlack
+        label.font = .systemFont(ofSize: 17, weight: .regular)
+        label.numberOfLines = 1
+        label.textAlignment = .center
+        label.textColor = .datePickerBlack
+        label.backgroundColor = .datePickerGray
+        label.layer.masksToBounds = true
+        label.layer.cornerRadius = 8
+        label.text = dateFormatter.string(from: datePicker.date)
         return label
     }()
     
-    private let searchBar: UISearchBar = {
-        let searchBar = UISearchBar()
-        searchBar.searchBarStyle = .minimal
-        searchBar.placeholder = "Поиск"
-        return searchBar
+    private lazy var dateContainerView: UIView = {
+        let view = UIView()
+        view.addSubview(datePicker)
+        view.insertSubview(dateLabel, aboveSubview: datePicker)
+        return view
+    }()
+    
+    private let searchController: UISearchController = {
+        let searchController = UISearchController(searchResultsController: nil)
+        searchController.searchBar.placeholder = "Поиск"
+        return searchController
     }()
     
     private let emptyStateImageView: UIImageView = {
@@ -67,8 +67,6 @@ final class TrackersListViewController: UIViewController {
         return stackView
     }()
     
-    private let emptyStateGuide = UILayoutGuide()
-    
     // MARK: - Private Properties
     
     private lazy var dateFormatter: DateFormatter = {
@@ -78,6 +76,11 @@ final class TrackersListViewController: UIViewController {
     }()
     
     private var categories: [TrackerCategory] = []
+    private var visibleCategories: [TrackerCategory] = [] {
+        didSet {
+            emptyStateStackView.isHidden = visibleCategories.isEmpty ? true : false
+        }
+    }
     private var completedTrackers: [TrackerRecord] = []
     
     // MARK: - Life Cycle
@@ -91,19 +94,26 @@ final class TrackersListViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .ypWhite
         view.addSubviews([
-            topElementsStackView,
-            trackersLabel,
-            searchBar,
             emptyStateStackView
         ])
-        view.addLayoutGuide(emptyStateGuide)
-        setDatePickerText()
+        
+        setupNavigationBar()
         setupConstraints()
+        setupActions()
     }
     
-    private func setDatePickerText() {
-        let dateString = dateFormatter.string(from: Date())
-        datePickerButton.setTitle(dateString, for: .normal)
+    private func setupNavigationBar() {
+        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationController?.navigationBar.largeTitleTextAttributes = [
+            .foregroundColor: UIColor.ypBlack,
+            .font: UIFont.systemFont(ofSize: 34, weight: .bold)
+        ]
+        navigationItem.title = "Трекеры"
+        
+        navigationItem.searchController = searchController
+        
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: addTrackerButton)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: dateContainerView)
     }
     
     // MARK: - Setup Constraints
@@ -113,52 +123,41 @@ final class TrackersListViewController: UIViewController {
         
         NSLayoutConstraint.activate([
             addTrackerButton.heightAnchor.constraint(equalToConstant: 42),
-            addTrackerButton.widthAnchor.constraint(equalToConstant: 42),
+            addTrackerButton.widthAnchor.constraint(equalTo: addTrackerButton.heightAnchor),
             
-            datePickerButton.heightAnchor.constraint(equalToConstant: 34),
-            datePickerButton.widthAnchor.constraint(equalToConstant: 77),
-            
-            topElementsStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 1),
-            topElementsStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 6),
-            topElementsStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            
-            trackersLabel.topAnchor.constraint(equalTo: topElementsStackView.bottomAnchor, constant: 1),
-            trackersLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            trackersLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            
-            searchBar.topAnchor.constraint(equalTo: trackersLabel.bottomAnchor, constant: 7),
-            searchBar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            searchBar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            
-            emptyStateGuide.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
-            emptyStateGuide.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            
-            emptyStateStackView.centerYAnchor.constraint(equalTo: emptyStateGuide.centerYAnchor),
-            emptyStateStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            dateContainerView.heightAnchor.constraint(equalToConstant: 34),
+            dateContainerView.widthAnchor.constraint(equalToConstant: 77),
             
             emptyStateImageView.heightAnchor.constraint(equalToConstant: 80),
-            emptyStateImageView.widthAnchor.constraint(equalToConstant: 80)
+            emptyStateImageView.widthAnchor.constraint(equalTo: emptyStateImageView.heightAnchor),
+            emptyStateStackView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
+            emptyStateStackView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor)
         ])
+        datePicker.edgesToSuperview()
+        dateLabel.edgesToSuperview()
+    }
+    
+    private func disableAutoresizingMaskForSubviews() {
+        let views = [
+            dateContainerView,
+            emptyStateLabel,
+            emptyStateImageView,
+            emptyStateStackView
+        ]
+        views.forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
     }
     
     // MARK: - Setup Actions
     
+    private func setupActions() {
+        datePicker.addTarget(self, action: #selector(datePickerValueChanged(_:)), for: .valueChanged)
+    }
+    
     // MARK: - Actions
     
-    // MARK: - Private Methods
-    
-    private func disableAutoresizingMaskForSubviews() {
-        let views = [
-            addTrackerButton,
-            datePickerButton,
-            topElementsStackView,
-            trackersLabel,
-            searchBar,
-            emptyStateStackView,
-            emptyStateImageView,
-            emptyStateLabel
-        ]
-        views.forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
+    @objc func datePickerValueChanged(_ sender: UIDatePicker) {
+        let selectedDate = sender.date
+        dateLabel.text = dateFormatter.string(from: selectedDate)
     }
     
 }

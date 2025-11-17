@@ -14,7 +14,8 @@ final class MainTabBarController: UITabBarController {
     
     private func buildTabBarControllers() {
         let trackersListVC = TrackersListViewController()
-        trackersListVC.tabBarItem = UITabBarItem(
+        let trackersNavigationVC = UINavigationController(rootViewController: trackersListVC)
+        trackersNavigationVC.tabBarItem = UITabBarItem(
             title: "Трекеры",
             image: UIImage(resource: .tabBarTrackers),
             selectedImage: nil
@@ -27,7 +28,7 @@ final class MainTabBarController: UITabBarController {
             selectedImage: nil
         )
         
-        viewControllers = [trackersListVC, statisticsVC]
+        viewControllers = [trackersNavigationVC, statisticsVC]
     }
     
     private func setupUI() {
