@@ -26,20 +26,30 @@ final class TrackerCategoryHeader: UICollectionReusableView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - Setup UI
+    
     private func setupUI() {
         addSubview(titleLabel)
         setupConstraints()
     }
+    
+    // MARK: - Setup Constraints
     
     private func setupConstraints() {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: topAnchor),
-            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-            titleLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
-            titleLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12)
+            titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 28),
+            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -28),
+            titleLabel.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
+    }
+    
+    // MARK: - Public Methods
+    
+    func configure(category: TrackerCategory) {
+        titleLabel.text = category.title
     }
     
 }

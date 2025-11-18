@@ -163,7 +163,7 @@ final class TrackerCell: UICollectionViewCell {
     
     // MARK: - Public Methods
     
-    func convert(from tracker: Tracker) {
+    func configure(from tracker: Tracker) {
         emojiLabel.text = tracker.emoji
         titleLabel.text = tracker.title
         fillColor = tracker.color
@@ -191,8 +191,4 @@ final class TrackerCell: UICollectionViewCell {
         return "\(value) \(word)"
     }
     
-}
-
-#Preview {
-    TrackerCell(frame: CGRect(x: 100, y: 100, width: 167, height: 148))
 }
