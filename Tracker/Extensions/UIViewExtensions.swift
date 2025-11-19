@@ -1,16 +1,10 @@
 import UIKit
 
-// MARK: - UIView+addSubviews
-
 extension UIView {
     func addSubviews(_ subviews: [UIView]) {
         subviews.forEach { addSubview($0) }
     }
-}
-
-// MARK: - UIView+edgesToSuperview
-
-extension UIView {
+    
     @discardableResult func edgesToSuperview() -> Self {
         guard let superview = superview else {
             fatalError("❌[edgesToSuperview()] View is not in the hierarchy, view: \(self)")
@@ -25,4 +19,5 @@ extension UIView {
         return self
     }
 }
+
 

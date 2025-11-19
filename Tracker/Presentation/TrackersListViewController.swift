@@ -106,7 +106,7 @@ final class TrackersListViewController: UIViewController {
             trackers: [
                 Tracker(id: UUID(), title: "Погладить кошку", color: .colorSelection14, emoji: "😸", schedule: [.thursday, .friday]),
                 Tracker(id: UUID(), title: "Посмотреть брейнрот", color: .colorSelection15, emoji: "🧠", schedule: [.friday, .saturday]),
-                Tracker(id: UUID(), title: "Заказать пиццу", color: .colorSelection5, emoji: "🍕", schedule: [.saturday, .sunday]),
+                Tracker(id: UUID(), title: "Заказать пиццу", color: .colorSelection5, emoji: "🍕", schedule: [.saturday])
             ]
         )
     ]
@@ -211,6 +211,15 @@ final class TrackersListViewController: UIViewController {
     
     // MARK: - Private Methods
     
+    private func configureCell(_ cell: TrackerCell, indexPath: IndexPath, updateDelegate: Bool) {
+        let category = visibleCategories[indexPath.section]
+        let tracker = category.trackers[indexPath.item]
+        let isCompleted = isCompleted(id: tracker.id, for: datePicker.date)
+        let quanity = getCurrentQuanity(id: tracker.id)
+        cell.configure(from: tracker, isCompleted: isCompleted, quanity: quanity)
+        if updateDelegate { cell.delegate = self }
+    }
+    
     private func updateEmptyState() {
         emptyStateStackView.isHidden = !visibleCategories.isEmpty
     }
@@ -239,6 +248,27 @@ final class TrackersListViewController: UIViewController {
         trackersCollectionView.reloadData()
     }
     
+    private func isCompleted(id: UUID, for date: Date) -> Bool {
+        completedTrackers.contains {
+            $0.trackerID == id && $0.completionDate.isSameDay(as: date)
+        }
+    }
+    
+    private func toggleTracker(id: UUID, for date: Date) {
+        if let index = completedTrackers.firstIndex(
+            where: { $0.trackerID == id && $0.completionDate.isSameDay(as: date) }
+        ) {
+            completedTrackers.remove(at: index)
+        } else {
+            let record = TrackerRecord(trackerID: id, completionDate: date)
+            completedTrackers.append(record)
+        }
+    }
+    
+    private func getCurrentQuanity(id: UUID) -> Int {
+        return completedTrackers.filter { $0.trackerID == id }.count
+    }
+    
 }
 
 // MARK: - UICollectionViewDataSource
@@ -256,11 +286,7 @@ extension TrackersListViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = trackersCollectionView.dequeueReusableCell(withReuseIdentifier: TrackerCell.reuseID, for: indexPath) as? TrackerCell else { return UICollectionViewCell() }
-        
-        let category = visibleCategories[indexPath.section]
-        let tracker = category.trackers[indexPath.item]
-        cell.configure(from: tracker)
-        
+        configureCell(cell, indexPath: indexPath, updateDelegate: true)
         return cell
     }
     
@@ -307,10 +333,34 @@ extension TrackersListViewController: UICollectionViewDelegateFlowLayout {
         return size
     }
     
+}
+
+// MARK: - TrackerCellDelegate
+
+extension TrackersListViewController: TrackerCellDelegate {
+    
+    func completeButtonDidTap(in cell: TrackerCell) {
+        let currentDate = datePicker.date
+        guard !currentDate.isFutureDate() else {
+            presentSimpleAlert(
+                title: "Не получится",
+                message: "Нельзя отметить привычку для будущей даты",
+                actionTitle: "Хорошо"
+            )
+            return
+        }
+        
+        guard let indexPath = trackersCollectionView.indexPath(for: cell) else { return }
+        let category = visibleCategories[indexPath.section]
+        let tracker = category.trackers[indexPath.item]
+        toggleTracker(id: tracker.id, for: currentDate)
+        configureCell(cell, indexPath: indexPath, updateDelegate: false)
+    }
     
 }
-/*
+
+
 #Preview {
     MainTabBarController()
 }
-*/
+

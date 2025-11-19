@@ -6,6 +6,10 @@ final class TrackerCell: UICollectionViewCell {
     
     static let reuseID = "trackerCellReuseIdentifier"
     
+    // MARK: - Delegate
+    
+    weak var delegate: TrackerCellDelegate?
+    
     // MARK: - Views
     
     private lazy var cardView: UIView = {
@@ -51,7 +55,7 @@ final class TrackerCell: UICollectionViewCell {
         return label
     }()
     
-    private lazy var plusButton: UIButton = {
+    private lazy var completeButton: UIButton = {
         let button = UIButton()
         let image = UIImage.plusButton.withRenderingMode(.alwaysTemplate)
         button.setImage(image, for: .normal)
@@ -61,7 +65,7 @@ final class TrackerCell: UICollectionViewCell {
     }()
     
     private lazy var quanityStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [quanityLabel, UIView(), plusButton])
+        let stackView = UIStackView(arrangedSubviews: [quanityLabel, UIView(), completeButton])
         stackView.axis = .horizontal
         stackView.distribution = .fill
         stackView.spacing = 0
@@ -82,7 +86,7 @@ final class TrackerCell: UICollectionViewCell {
     private var fillColor: UIColor = .ypGray {
         didSet {
             cardView.backgroundColor = fillColor
-            plusButton.tintColor = fillColor
+            completeButton.tintColor = fillColor
         }
     }
     
@@ -121,7 +125,7 @@ final class TrackerCell: UICollectionViewCell {
             emojiLabel,
             titleLabel,
             quanityLabel,
-            plusButton,
+            completeButton,
             quanityStackView
         ])
         
@@ -150,23 +154,30 @@ final class TrackerCell: UICollectionViewCell {
     // MARK: - Setup Actions
     
     private func setupActions() {
-        plusButton.addTarget(self, action: #selector(plusButtonTapped), for: .touchUpInside)
+        completeButton.addTarget(self, action: #selector(plusButtonTapped), for: .touchUpInside)
     }
     
     // MARK: - Actions
     
     @objc private func plusButtonTapped() {
-        let image = UIImage.doneButton.withRenderingMode(.alwaysTemplate)
-        plusButton.setImage(image, for: .normal)
-        quanity += 1
+        delegate?.completeButtonDidTap(in: self)
     }
     
     // MARK: - Public Methods
     
-    func configure(from tracker: Tracker) {
+    func configure(from tracker: Tracker, isCompleted: Bool, quanity: Int) {
         emojiLabel.text = tracker.emoji
         titleLabel.text = tracker.title
         fillColor = tracker.color
+        self.quanity = quanity
+        
+        let plusImage = UIImage.plusButton.withRenderingMode(.alwaysTemplate)
+        let doneImage = UIImage.doneButton.withRenderingMode(.alwaysTemplate)
+        if isCompleted {
+            completeButton.setImage(doneImage, for: .normal)
+        } else {
+            completeButton.setImage(plusImage, for: .normal)
+        }
     }
     
     // MARK: - Private Methods
