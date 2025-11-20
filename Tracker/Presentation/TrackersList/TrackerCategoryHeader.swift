@@ -4,7 +4,7 @@ final class TrackerCategoryHeader: UICollectionReusableView {
     
     // MARK: - Identifier
     
-    static let reuseID = "trackerCategoryHeaderReuseIdentifier"
+    static let reuseID = "TrackerCategoryHeaderReuseIdentifier"
     
     // MARK: - Views
     

@@ -4,7 +4,7 @@ final class TrackerCell: UICollectionViewCell {
     
     // MARK: - Identifier
     
-    static let reuseID = "trackerCellReuseIdentifier"
+    static let reuseID = "TrackerCellReuseIdentifier"
     
     // MARK: - Delegate
     

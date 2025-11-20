@@ -199,6 +199,7 @@ final class TrackersListViewController: UIViewController {
     
     private func setupActions() {
         datePicker.addTarget(self, action: #selector(datePickerValueChanged(_:)), for: .valueChanged)
+        addTrackerButton.addTarget(self, action: #selector(addTrackerButtonDidTap), for: .touchUpInside)
     }
     
     // MARK: - Actions
@@ -207,6 +208,13 @@ final class TrackersListViewController: UIViewController {
         let selectedDate = sender.date
         dateLabel.text = dateFormatter.string(from: selectedDate)
         filterTrackers(for: selectedDate)
+    }
+    
+    @objc func addTrackerButtonDidTap() {
+        let newTrackerVC = NewTrackerViewController()
+        let navigationVC = UINavigationController(rootViewController: newTrackerVC)
+        navigationVC.modalPresentationStyle = .popover
+        present(navigationVC, animated: true)
     }
     
     // MARK: - Private Methods
@@ -285,7 +293,10 @@ extension TrackersListViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = trackersCollectionView.dequeueReusableCell(withReuseIdentifier: TrackerCell.reuseID, for: indexPath) as? TrackerCell else { return UICollectionViewCell() }
+        guard let cell = trackersCollectionView.dequeueReusableCell(withReuseIdentifier: TrackerCell.reuseID, for: indexPath) as? TrackerCell else {
+            assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(TrackerCell.reuseID) as \(String(describing: TrackerCell.self))")
+            return UICollectionViewCell()
+        }
         configureCell(cell, indexPath: indexPath, updateDelegate: true)
         return cell
     }
