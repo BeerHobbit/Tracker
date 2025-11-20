@@ -4,12 +4,12 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - Types
     
-    private enum SectionTypes: Int, CaseIterable {
+    private enum SectionType: Int, CaseIterable {
         case enterName = 0
         case parameters = 1
     }
     
-    private enum ParametersTypes: Int, CaseIterable {
+    private enum ParameterType: Int, CaseIterable {
         case category = 0
         case shedule = 1
     }
@@ -20,12 +20,21 @@ final class NewTrackerViewController: UIViewController {
         let tableView = UITableView(frame: .zero, style: .grouped)
         tableView.backgroundColor = .ypWhite
         tableView.register(EnterNameCell.self, forCellReuseIdentifier: EnterNameCell.reuseID)
+        tableView.register(ParametersCell.self, forCellReuseIdentifier: ParametersCell.reuseID)
         tableView.separatorStyle = .none
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 75
         tableView.keyboardDismissMode = .onDrag
         return tableView
     }()
+    
+    // MARK: - State
+    
+    private var newTrackerTitle: String = ""
+    private var newTrackerCategory: String = "Важное"
+    private var newTrackerShedule: Set<Weekday> = []
+    private var newTrackerEmoji: String = "🤪"
+    private var newTrackerColor: UIColor = .colorSelection1
     
     // MARK: - Life Cycle
     
@@ -104,27 +113,61 @@ final class NewTrackerViewController: UIViewController {
 extension NewTrackerViewController: UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        return SectionTypes.allCases.count
+        return SectionType.allCases.count
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        guard let sectionType = SectionTypes(rawValue: section) else {
-            assertionFailure("❌[numberOfRowsInSection] no such rawValue for \(String(describing: SectionTypes.self))")
+        guard let sectionType = SectionType(rawValue: section) else {
+            assertionFailure("❌[numberOfRowsInSection] no such rawValue for \(String(describing: SectionType.self))")
             return 0
         }
         switch sectionType {
         case .enterName: return 1
-        case .parameters: return ParametersTypes.allCases.count
+        case .parameters: return ParameterType.allCases.count
         }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: EnterNameCell.reuseID, for: indexPath) as? EnterNameCell else {
-            assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(EnterNameCell.reuseID) as \(String(describing: EnterNameCell.self))")
+        guard let sectionType = SectionType(rawValue: indexPath.section) else {
+            assertionFailure("❌[cellForRowAt] no such rawValue for \(String(describing: SectionType.self))")
             return UITableViewCell()
         }
         
-        return cell
+        switch sectionType {
+        case .enterName:
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: EnterNameCell.reuseID, for: indexPath) as? EnterNameCell else {
+                assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(EnterNameCell.reuseID) as \(String(describing: EnterNameCell.self))")
+                return UITableViewCell()
+            }
+            cell.delegate = self
+            return cell
+            
+        case .parameters:
+            guard let parameterType = ParameterType(rawValue: indexPath.row) else {
+                assertionFailure("❌[cellForRowAt] no such rawValue for \(String(describing: ParameterType.self))")
+                return UITableViewCell()
+            }
+            
+            switch parameterType {
+            case .category:
+                guard let cell = tableView.dequeueReusableCell(withIdentifier: ParametersCell.reuseID, for: indexPath) as? ParametersCell else {
+                    assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(ParametersCell.reuseID) as \(String(describing: ParametersCell.self))")
+                    return UITableViewCell()
+                }
+                let parameter = NewTrackerParameter(title: "Категория", subtitle: "Важное")
+                cell.configure(parameter: parameter, isFirst: true, isLast: false)
+                return cell
+                
+            case .shedule:
+                guard let cell = tableView.dequeueReusableCell(withIdentifier: ParametersCell.reuseID, for: indexPath) as? ParametersCell else {
+                    assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(ParametersCell.reuseID) as \(String(describing: ParametersCell.self))")
+                    return UITableViewCell()
+                }
+                let parameter = NewTrackerParameter(title: "Расписание", subtitle: "Вт, Сб")
+                cell.configure(parameter: parameter, isFirst: false, isLast: true)
+                return cell
+            }
+        }
     }
     
 }
@@ -146,8 +189,19 @@ extension NewTrackerViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return section == SectionTypes.allCases.count ? 16 : 0
+        return section == SectionType.allCases.count ? 16 : 0
     }
+}
+
+// MARK: - EnterNameCellDelegate
+
+extension NewTrackerViewController: EnterNameCellDelegate {
+    
+    func enterNameCell(_ cell: EnterNameCell, didChangeText text: String) {
+        newTrackerTitle = text
+        print(newTrackerTitle)
+    }
+    
 }
 
 #Preview {

@@ -6,6 +6,10 @@ final class EnterNameCell: UITableViewCell {
     
     static let reuseID = "EnterNameReuseIdentifier"
     
+    // MARK: - Delegate
+    
+    weak var delegate: EnterNameCellDelegate?
+    
     // MARK: - Views
     
     private let nameTextField: UITextField = {
@@ -112,8 +116,11 @@ final class EnterNameCell: UITableViewCell {
     // MARK: - Actions
     
     @objc private func nameTextFieldEditingChanged() {
-        _ = isTooLong(string: nameTextField.text ?? "")
+        let text = nameTextField.text ?? ""
+        _ = isTooLong(string: text)
         performTableViewUpdates()
+        
+        delegate?.enterNameCell(self, didChangeText: text)
     }
     
     // MARK: - Private Methods
