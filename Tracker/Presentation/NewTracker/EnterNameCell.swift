@@ -128,6 +128,7 @@ final class EnterNameCell: UITableViewCell {
     private func performTableViewUpdates() {
         if let tableView = self.superview as? UITableView {
             tableView.beginUpdates()
+            tableView.beginUpdates()
             tableView.endUpdates()
         }
     }

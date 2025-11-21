@@ -1,6 +1,6 @@
 import UIKit
 
-final class ParametersCell: UITableViewCell {
+final class ParameterCell: UITableViewCell {
     
     // MARK: - Identifier
     
@@ -59,6 +59,21 @@ final class ParametersCell: UITableViewCell {
         view.backgroundColor = .ypGray
         return view
     }()
+    
+    // MARK: - Private Properties
+    
+    private var title: String = "" {
+        didSet {
+            titleLabel.text = title
+        }
+    }
+    
+    private var subtitle: String = "" {
+        didSet {
+            subtitleLabel.text = subtitle
+            subtitleLabel.isHidden = subtitle.isEmpty
+        }
+    }
     
     // MARK: - Initializer
     
@@ -121,14 +136,14 @@ final class ParametersCell: UITableViewCell {
     
     // MARK: - Public Methods
     
-    func configure(parameter: NewTrackerParameter, isFirst: Bool, isLast: Bool) {
-        titleLabel.text = parameter.title
-        subtitleLabel.text = parameter.subtitle
+    func configure(parameter: NewTrackerParameter) {
+        title = parameter.title
+        subtitle = parameter.subtitle
         
-        if isFirst {
+        if parameter.isFirst {
             containerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         }
-        if isLast {
+        if parameter.isLast {
             containerView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
             separatorView.isHidden = true
         }

@@ -20,7 +20,7 @@ final class NewTrackerViewController: UIViewController {
         let tableView = UITableView(frame: .zero, style: .grouped)
         tableView.backgroundColor = .ypWhite
         tableView.register(EnterNameCell.self, forCellReuseIdentifier: EnterNameCell.reuseID)
-        tableView.register(ParametersCell.self, forCellReuseIdentifier: ParametersCell.reuseID)
+        tableView.register(ParameterCell.self, forCellReuseIdentifier: ParameterCell.reuseID)
         tableView.separatorStyle = .none
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 75
@@ -31,7 +31,7 @@ final class NewTrackerViewController: UIViewController {
     // MARK: - State
     
     private var newTrackerTitle: String = ""
-    private var newTrackerCategory: String = "Важное"
+    private var newTrackerCategory: String = ""
     private var newTrackerShedule: Set<Weekday> = []
     private var newTrackerEmoji: String = "🤪"
     private var newTrackerColor: UIColor = .colorSelection1
@@ -104,7 +104,39 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - Private Methods
     
+    private func makeEnterNameCell(_ tableView: UITableView, for indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: EnterNameCell.reuseID, for: indexPath) as? EnterNameCell else {
+            assertionFailure("❌[makeEnterNameCell]: can't dequeue reusable cell with id: \(EnterNameCell.reuseID) as \(String(describing: EnterNameCell.self))")
+            return UITableViewCell()
+        }
+        cell.delegate = self
+        return cell
+    }
     
+    private func makeParameterCell(_ tableView: UITableView, for indexPath: IndexPath) -> UITableViewCell {
+        guard let parameterType = ParameterType(rawValue: indexPath.row) else {
+            assertionFailure("❌[makeParameterCell] no such rawValue for \(String(describing: ParameterType.self))")
+            return UITableViewCell()
+        }
+        
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ParameterCell.reuseID, for: indexPath) as? ParameterCell else {
+            assertionFailure("❌[makeParameterCell]: can't dequeue reusable cell with id: \(ParameterCell.reuseID) as \(String(describing: ParameterCell.self))")
+            return UITableViewCell()
+        }
+        
+        let configuration = parameterConfig(type: parameterType)
+        cell.configure(parameter: configuration)
+        return cell
+    }
+    
+    private func parameterConfig(type: ParameterType) -> NewTrackerParameter {
+        switch type {
+        case .category:
+            return NewTrackerParameter(title: "Категория", subtitle: newTrackerCategory, isFirst: true, isLast: false)
+        case .shedule:
+            return NewTrackerParameter(title: "Расписание", subtitle: "Вт, Сб", isFirst: false, isLast: true)
+        }
+    }
     
 }
 
@@ -135,38 +167,9 @@ extension NewTrackerViewController: UITableViewDataSource {
         
         switch sectionType {
         case .enterName:
-            guard let cell = tableView.dequeueReusableCell(withIdentifier: EnterNameCell.reuseID, for: indexPath) as? EnterNameCell else {
-                assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(EnterNameCell.reuseID) as \(String(describing: EnterNameCell.self))")
-                return UITableViewCell()
-            }
-            cell.delegate = self
-            return cell
-            
+            return makeEnterNameCell(tableView, for: indexPath)
         case .parameters:
-            guard let parameterType = ParameterType(rawValue: indexPath.row) else {
-                assertionFailure("❌[cellForRowAt] no such rawValue for \(String(describing: ParameterType.self))")
-                return UITableViewCell()
-            }
-            
-            switch parameterType {
-            case .category:
-                guard let cell = tableView.dequeueReusableCell(withIdentifier: ParametersCell.reuseID, for: indexPath) as? ParametersCell else {
-                    assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(ParametersCell.reuseID) as \(String(describing: ParametersCell.self))")
-                    return UITableViewCell()
-                }
-                let parameter = NewTrackerParameter(title: "Категория", subtitle: "Важное")
-                cell.configure(parameter: parameter, isFirst: true, isLast: false)
-                return cell
-                
-            case .shedule:
-                guard let cell = tableView.dequeueReusableCell(withIdentifier: ParametersCell.reuseID, for: indexPath) as? ParametersCell else {
-                    assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(ParametersCell.reuseID) as \(String(describing: ParametersCell.self))")
-                    return UITableViewCell()
-                }
-                let parameter = NewTrackerParameter(title: "Расписание", subtitle: "Вт, Сб")
-                cell.configure(parameter: parameter, isFirst: false, isLast: true)
-                return cell
-            }
+            return makeParameterCell(tableView, for: indexPath)
         }
     }
     
@@ -191,6 +194,7 @@ extension NewTrackerViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
         return section == SectionType.allCases.count ? 16 : 0
     }
+    
 }
 
 // MARK: - EnterNameCellDelegate
@@ -207,3 +211,5 @@ extension NewTrackerViewController: EnterNameCellDelegate {
 #Preview {
     UINavigationController(rootViewController: NewTrackerViewController())
 }
+
+
