@@ -2,39 +2,95 @@ import UIKit
 
 final class NewTrackerViewController: UIViewController {
     
+    // MARK: - Delegate
+    
+    weak var delegate: NewTrackerViewControllerDelegate?
+    
     // MARK: - Types
     
     private enum SectionType: Int, CaseIterable {
-        case enterName = 0
-        case parameters = 1
+        case enterName, parameters
     }
     
     private enum ParameterType: Int, CaseIterable {
-        case category = 0
-        case shedule = 1
+        case category, schedule
     }
     
     // MARK: - Views
     
     private let tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
-        tableView.backgroundColor = .ypWhite
+        
         tableView.register(EnterNameCell.self, forCellReuseIdentifier: EnterNameCell.reuseID)
         tableView.register(ParameterCell.self, forCellReuseIdentifier: ParameterCell.reuseID)
+        
+        tableView.backgroundColor = .ypWhite
         tableView.separatorStyle = .none
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 75
+        tableView.estimatedRowHeight = 113
         tableView.keyboardDismissMode = .onDrag
+        
         return tableView
+    }()
+    
+    private let cancelButton: UIButton = {
+        let button = UIButton()
+        
+        button.setTitle("Отменить", for: .normal)
+        button.setTitleColor(.ypRed, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        button.backgroundColor = .clear
+        
+        button.layer.masksToBounds = true
+        button.layer.cornerRadius = 16
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor(resource: .ypRed).cgColor
+        
+        return button
+    }()
+    
+    private let createButton: UIButton = {
+        let button = UIButton()
+        
+        button.setTitle("Создать", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        button.backgroundColor = .ypGray
+        
+        button.layer.masksToBounds = true
+        button.layer.cornerRadius = 16
+        
+        button.isEnabled = false
+        
+        return button
+    }()
+    
+    private lazy var buttonStackView: UIStackView = {
+        let stackView = UIStackView(arrangedSubviews: [cancelButton, createButton])
+        stackView.axis = .horizontal
+        stackView.spacing = 8
+        stackView.alignment = .fill
+        stackView.distribution = .fillEqually
+        return stackView
     }()
     
     // MARK: - State
     
-    private var newTrackerTitle: String = ""
-    private var newTrackerCategory: String = ""
-    private var newTrackerShedule: Set<Weekday> = []
-    private var newTrackerEmoji: String = "🤪"
-    private var newTrackerColor: UIColor = .colorSelection1
+    private var state = NewTrackerState(
+        title: "",
+        category: "Важное",
+        schedule: [],
+        emoji: "🤯",
+        color: .colorSelection1
+    ) {
+        didSet {
+            createButton.isEnabled = state.isReady
+            createButton.backgroundColor = state.isReady ? .ypBlack : .ypGray
+        }
+    }
+    
+    // MARK: - Private Properties
+    
+    private var scheduleVC: ScheduleViewController? = ScheduleViewController()
     
     // MARK: - Life Cycle
     
@@ -49,6 +105,8 @@ final class NewTrackerViewController: UIViewController {
     private func configDependencies() {
         tableView.dataSource = self
         tableView.delegate = self
+        
+        scheduleVC?.delegate = self
     }
     
     // MARK: - Setup UI
@@ -56,7 +114,8 @@ final class NewTrackerViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .ypWhite
         view.addSubviews([
-            tableView
+            tableView,
+            buttonStackView
         ])
         
         setupNavigationBar()
@@ -76,30 +135,44 @@ final class NewTrackerViewController: UIViewController {
     
     private func setupConstraints() {
         disableAutoresizingMaskForViews([
-            tableView
+            tableView,
+            buttonStackView
         ])
         
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: buttonStackView.topAnchor, constant: -16),
+            
+            buttonStackView.heightAnchor.constraint(equalToConstant: 60),
+            buttonStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            buttonStackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            buttonStackView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
         ])
     }
     
     // MARK: - Setup Actions
     
     private func setupActions() {
-        let singleTap = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
-        singleTap.numberOfTapsRequired = 1
-        singleTap.cancelsTouchesInView = false
-        view.addGestureRecognizer(singleTap)
+        view.addGestureRecognizer(singleTapRecognizer())
+        cancelButton.addTarget(self, action: #selector(didTapCancelButton), for: .touchUpInside)
+        createButton.addTarget(self, action: #selector(didTapCreateButton), for: .touchUpInside)
     }
     
     // MARK: - Actions
     
-    @objc private func hideKeyboard() {
+    @objc private func didSingleTap() {
         view.endEditing(true)
+    }
+    
+    @objc private func didTapCancelButton() {
+        dismiss(animated: true)
+    }
+    
+    @objc private func didTapCreateButton() {
+        delegate?.createTracker(from: state)
+        dismiss(animated: true)
     }
     
     // MARK: - Private Methods
@@ -132,10 +205,23 @@ final class NewTrackerViewController: UIViewController {
     private func parameterConfig(type: ParameterType) -> NewTrackerParameter {
         switch type {
         case .category:
-            return NewTrackerParameter(title: "Категория", subtitle: newTrackerCategory, isFirst: true, isLast: false)
-        case .shedule:
-            return NewTrackerParameter(title: "Расписание", subtitle: "Вт, Сб", isFirst: false, isLast: true)
+            return NewTrackerParameter(title: "Категория", subtitle: state.category, isFirst: true, isLast: false)
+        case .schedule:
+            let scheduleString = Weekday.formattedWeekdays(Array(state.schedule))
+            return NewTrackerParameter(title: "Расписание", subtitle: scheduleString, isFirst: false, isLast: true)
         }
+    }
+    
+    private func singleTapRecognizer() -> UITapGestureRecognizer {
+        let singleTap = UITapGestureRecognizer(target: self, action: #selector(didSingleTap))
+        singleTap.numberOfTapsRequired = 1
+        singleTap.cancelsTouchesInView = false
+        return singleTap
+    }
+    
+    private func pushToScheduleVC() {
+        guard let scheduleVC = scheduleVC else { return }
+        navigationController?.pushViewController(scheduleVC, animated: true)
     }
     
 }
@@ -179,6 +265,26 @@ extension NewTrackerViewController: UITableViewDataSource {
 
 extension NewTrackerViewController: UITableViewDelegate {
     
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let sectionType = SectionType(rawValue: indexPath.section) else {
+            assertionFailure("❌[didSelectRowAt] no such rawValue for \(String(describing: SectionType.self))")
+            return
+        }
+        guard let parameterType = ParameterType(rawValue: indexPath.row) else {
+            assertionFailure("❌[didSelectRowAt] no such rawValue for \(String(describing: ParameterType.self))")
+            return
+        }
+        
+        switch sectionType {
+        case .parameters:
+            switch parameterType {
+            case .category: return
+            case .schedule: pushToScheduleVC()
+            }
+        default: return
+        }
+    }
+    
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         return UIView()
     }
@@ -192,7 +298,7 @@ extension NewTrackerViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return section == SectionType.allCases.count ? 16 : 0
+        return 0
     }
     
 }
@@ -202,14 +308,26 @@ extension NewTrackerViewController: UITableViewDelegate {
 extension NewTrackerViewController: EnterNameCellDelegate {
     
     func enterNameCell(_ cell: EnterNameCell, didChangeText text: String) {
-        newTrackerTitle = text
-        print(newTrackerTitle)
+        state.title = text
+    }
+    
+    func updateCellLayout() {
+        tableView.beginUpdates()
+        tableView.endUpdates()
     }
     
 }
 
-#Preview {
-    UINavigationController(rootViewController: NewTrackerViewController())
+// MARK: - ScheduleViewControllerDelegate
+
+extension NewTrackerViewController: ScheduleViewControllerDelegate {
+    
+    func getConfiguredSchedule(_ schedule: Set<Weekday>) {
+        state.schedule = schedule
+        let indexPath = IndexPath(row: ParameterType.schedule.rawValue, section: SectionType.parameters.rawValue)
+        tableView.reloadRows(at: [indexPath], with: .none)
+    }
+    
 }
 
 

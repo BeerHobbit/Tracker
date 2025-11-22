@@ -44,7 +44,7 @@ final class EnterNameCell: UITableViewCell {
     private lazy var stackView: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [containerView, errorLabel])
         stackView.axis = .vertical
-        stackView.spacing = 8
+        stackView.spacing = 0
         stackView.alignment = .center
         stackView.distribution = .fill
         return stackView
@@ -94,12 +94,14 @@ final class EnterNameCell: UITableViewCell {
         
         NSLayoutConstraint.activate([
             stackView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             
             containerView.heightAnchor.constraint(equalToConstant: 75),
             containerView.widthAnchor.constraint(equalTo: stackView.widthAnchor),
+            
+            errorLabel.heightAnchor.constraint(equalToConstant: 38),
             
             nameTextField.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
             nameTextField.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
@@ -119,18 +121,13 @@ final class EnterNameCell: UITableViewCell {
         let text = nameTextField.text ?? ""
         _ = isTooLong(string: text)
         performTableViewUpdates()
-        
         delegate?.enterNameCell(self, didChangeText: text)
     }
     
     // MARK: - Private Methods
     
     private func performTableViewUpdates() {
-        if let tableView = self.superview as? UITableView {
-            tableView.beginUpdates()
-            tableView.beginUpdates()
-            tableView.endUpdates()
-        }
+        delegate?.updateCellLayout()
     }
     
     private func isTooLong(string: String) -> Bool {
@@ -150,10 +147,11 @@ extension EnterNameCell: UITextFieldDelegate {
         guard let stringRange = Range(range, in: currentText) else { return false }
         let updatedText = currentText.replacingCharacters(in: stringRange, with: string)
         
-        let stringIsTooLong = isTooLong(string: updatedText)
-        performTableViewUpdates()
-        
-        return !stringIsTooLong
+        let isLong = isTooLong(string: updatedText)
+        if isLong {
+            performTableViewUpdates()
+        }
+        return !isLong
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {

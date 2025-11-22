@@ -77,6 +77,19 @@ final class TrackersListViewController: UIViewController {
         return collectionView
     }()
     
+    private let filterButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Фильтры", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .regular)
+        button.backgroundColor = .ypBlue
+        
+        button.layer.masksToBounds = true
+        button.layer.cornerRadius = 16
+        
+        return button
+    }()
+    
     // MARK: - Private Properties
     
     private lazy var dateFormatter: DateFormatter = {
@@ -95,19 +108,7 @@ final class TrackersListViewController: UIViewController {
     private var categories: [TrackerCategory] = [
         TrackerCategory(
             title: "Важное",
-            trackers: [
-                Tracker(id: UUID(), title: "Помыть посуду", color: .colorSelection3, emoji: "🤔", schedule: [.monday, .tuesday]),
-                Tracker(id: UUID(), title: "Приготовить фобо", color: .colorSelection1, emoji: "🍲", schedule: [.tuesday, .wednesday]),
-                Tracker(id: UUID(), title: "Поспать", color: .colorSelection5, emoji: "😴", schedule: [.wednesday, .thursday]),
-            ]
-        ),
-        TrackerCategory(
-            title: "Бумажное",
-            trackers: [
-                Tracker(id: UUID(), title: "Погладить кошку", color: .colorSelection14, emoji: "😸", schedule: [.thursday, .friday]),
-                Tracker(id: UUID(), title: "Посмотреть брейнрот", color: .colorSelection15, emoji: "🧠", schedule: [.friday, .saturday]),
-                Tracker(id: UUID(), title: "Заказать пиццу", color: .colorSelection5, emoji: "🍕", schedule: [.saturday])
-            ]
+            trackers: []
         )
     ]
     
@@ -142,6 +143,7 @@ final class TrackersListViewController: UIViewController {
         view.addSubviews([
             emptyStateStackView,
             trackersCollectionView,
+            filterButton
         ])
         
         setupNavigationBar()
@@ -171,7 +173,8 @@ final class TrackersListViewController: UIViewController {
             emptyStateLabel,
             emptyStateImageView,
             emptyStateStackView,
-            trackersCollectionView
+            trackersCollectionView,
+            filterButton
         ])
         
         NSLayoutConstraint.activate([
@@ -189,7 +192,12 @@ final class TrackersListViewController: UIViewController {
             emptyStateImageView.heightAnchor.constraint(equalToConstant: 80),
             emptyStateImageView.widthAnchor.constraint(equalTo: emptyStateImageView.heightAnchor),
             emptyStateStackView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
-            emptyStateStackView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor)
+            emptyStateStackView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            
+            filterButton.heightAnchor.constraint(equalToConstant: 50),
+            filterButton.widthAnchor.constraint(equalToConstant: 114),
+            filterButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            filterButton.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor)
         ])
         datePicker.edgesToSuperview()
         dateLabel.edgesToSuperview()
@@ -212,6 +220,7 @@ final class TrackersListViewController: UIViewController {
     
     @objc func addTrackerButtonDidTap() {
         let newTrackerVC = NewTrackerViewController()
+        newTrackerVC.delegate = self
         let navigationVC = UINavigationController(rootViewController: newTrackerVC)
         navigationVC.modalPresentationStyle = .popover
         present(navigationVC, animated: true)
@@ -370,8 +379,21 @@ extension TrackersListViewController: TrackerCellDelegate {
     
 }
 
+// MARK: - NewTrackerViewControllerDelegate
 
-#Preview {
-    MainTabBarController()
+extension TrackersListViewController: NewTrackerViewControllerDelegate {
+    
+    func createTracker(from config: NewTrackerState) {
+        let tracker = Tracker(
+            id: UUID(),
+            title: config.title,
+            color: config.color ?? .ypLightGray,
+            emoji: config.emoji,
+            schedule: config.schedule
+        )
+        categories[0].trackers.append(tracker)
+        filterTrackers(for: datePicker.date)
+    }
+    
 }
 

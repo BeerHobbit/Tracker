@@ -1,24 +1,19 @@
 import UIKit
 
-final class ParameterCell: UITableViewCell {
+final class ScheduleCell: UITableViewCell {
     
     // MARK: - Identifier
     
-    static let reuseID = "ParametersReuseIdentifier"
+    static let reuseID = "ScheduleCellReuseIdentifier"
+    
+    // MARK: - Delegate
+    
+    weak var delegate: ScheduleCellDelegate?
     
     // MARK: - Views
     
-    private lazy var vStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
-        stackView.axis = .vertical
-        stackView.spacing = 2
-        stackView.alignment = .leading
-        stackView.distribution = .fill
-        return stackView
-    }()
-    
     private lazy var hStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [vStackView, UIView(), iconImageView])
+        let stackView = UIStackView(arrangedSubviews: [titleLabel, UIView(), daySwitch])
         stackView.axis = .horizontal
         stackView.spacing = 0
         stackView.alignment = .center
@@ -30,7 +25,6 @@ final class ParameterCell: UITableViewCell {
         let view = UIView()
         view.backgroundColor = .ypBackground
         view.layer.masksToBounds = true
-        view.layer.cornerRadius = 16
         return view
     }()
     
@@ -41,17 +35,11 @@ final class ParameterCell: UITableViewCell {
         return label
     }()
     
-    private let subtitleLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 17, weight: .regular)
-        label.textColor = .ypGray
-        return label
-    }()
-    
-    private let iconImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = .chevron
-        return imageView
+    private let daySwitch: UISwitch = {
+        let toggler = UISwitch()
+        toggler.isOn = false
+        toggler.onTintColor = .ypBlue
+        return toggler
     }()
     
     private let separatorView: UIView = {
@@ -62,18 +50,7 @@ final class ParameterCell: UITableViewCell {
     
     // MARK: - Private Properties
     
-    private var title: String = "" {
-        didSet {
-            titleLabel.text = title
-        }
-    }
-    
-    private var subtitle: String = "" {
-        didSet {
-            subtitleLabel.text = subtitle
-            subtitleLabel.isHidden = subtitle.isEmpty
-        }
-    }
+    private var cellWeekday: Weekday?
     
     // MARK: - Initializer
     
@@ -97,24 +74,21 @@ final class ParameterCell: UITableViewCell {
         ])
         
         setupConstraints()
+        setupActions()
     }
-    
-    // MARK: - Setup Constraints
     
     private func setupConstraints() {
         disableAutoresizingMaskForViews([
-            vStackView,
             hStackView,
             containerView,
             titleLabel,
-            subtitleLabel,
-            iconImageView,
+            daySwitch,
             separatorView
         ])
         
         NSLayoutConstraint.activate([
-            iconImageView.widthAnchor.constraint(equalToConstant: 24),
-            iconImageView.heightAnchor.constraint(equalTo: iconImageView.widthAnchor),
+            daySwitch.widthAnchor.constraint(equalToConstant: 51),
+            daySwitch.heightAnchor.constraint(equalToConstant: 31),
             
             hStackView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
             hStackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
@@ -133,17 +107,30 @@ final class ParameterCell: UITableViewCell {
         ])
     }
     
+    // MARK: - Setup Actions
+    
+    private func setupActions() {
+        daySwitch.addTarget(self, action: #selector(daySwitchChanged), for: .valueChanged)
+    }
+    
+    // MARK: - Actions
+    
+    @objc private func daySwitchChanged() {
+        guard let day = cellWeekday else { return }
+        delegate?.weekdayInCell(day: day, isIncluded: daySwitch.isOn)
+    }
+    
     // MARK: - Public Methods
     
-    func configure(parameter: NewTrackerParameter) {
-        title = parameter.title
-        subtitle = parameter.subtitle
+    func configure(weekday: Weekday, isFirst: Bool, isLast: Bool) {
+        cellWeekday = weekday
+        titleLabel.text = weekday.longString
         
-        if parameter.isFirst {
+        if isFirst {
             containerView.layer.cornerRadius = 16
             containerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         }
-        if parameter.isLast {
+        if isLast {
             containerView.layer.cornerRadius = 16
             containerView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
             separatorView.isHidden = true
