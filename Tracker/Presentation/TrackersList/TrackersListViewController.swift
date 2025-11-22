@@ -118,7 +118,7 @@ final class TrackersListViewController: UIViewController {
         }
     }
     
-    private var completedTrackers: [TrackerRecord] = []
+    private var completedTrackers: Set<TrackerRecord> = []
     
     // MARK: - Life Cycle
     
@@ -266,19 +266,16 @@ final class TrackersListViewController: UIViewController {
     }
     
     private func isCompleted(id: UUID, for date: Date) -> Bool {
-        completedTrackers.contains {
-            $0.trackerID == id && $0.completionDate.isSameDay(as: date)
-        }
+        let record = TrackerRecord(trackerID: id, completionDate: date)
+        return completedTrackers.contains(record)
     }
     
     private func toggleTracker(id: UUID, for date: Date) {
-        if let index = completedTrackers.firstIndex(
-            where: { $0.trackerID == id && $0.completionDate.isSameDay(as: date) }
-        ) {
-            completedTrackers.remove(at: index)
+        let record = TrackerRecord(trackerID: id, completionDate: date)
+        if completedTrackers.contains(record) {
+            completedTrackers.remove(record)
         } else {
-            let record = TrackerRecord(trackerID: id, completionDate: date)
-            completedTrackers.append(record)
+            completedTrackers.insert(record)
         }
     }
     
