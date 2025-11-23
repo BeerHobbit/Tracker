@@ -213,7 +213,7 @@ final class TrackersListViewController: UIViewController {
     // MARK: - Actions
     
     @objc func datePickerValueChanged(_ sender: UIDatePicker) {
-        let selectedDate = sender.date
+        let selectedDate = sender.date.excludeTime()
         dateLabel.text = dateFormatter.string(from: selectedDate)
         filterTrackers(for: selectedDate)
     }
@@ -266,12 +266,12 @@ final class TrackersListViewController: UIViewController {
     }
     
     private func isCompleted(id: UUID, for date: Date) -> Bool {
-        let record = TrackerRecord(trackerID: id, completionDate: date)
+        let record = TrackerRecord(trackerID: id, completionDate: date.excludeTime())
         return completedTrackers.contains(record)
     }
     
     private func toggleTracker(id: UUID, for date: Date) {
-        let record = TrackerRecord(trackerID: id, completionDate: date)
+        let record = TrackerRecord(trackerID: id, completionDate: date.excludeTime())
         if completedTrackers.contains(record) {
             completedTrackers.remove(record)
         } else {

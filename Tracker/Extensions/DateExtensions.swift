@@ -8,4 +8,8 @@ extension Date {
     func isFutureDate() -> Bool {
         return Calendar.current.compare(self, to: Date(), toGranularity: .day) == .orderedDescending
     }
+    
+    func excludeTime() -> Date {
+        Calendar.current.startOfDay(for: self)
+    }
 }
