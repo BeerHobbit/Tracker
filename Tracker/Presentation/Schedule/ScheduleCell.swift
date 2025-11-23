@@ -21,28 +21,28 @@ final class ScheduleCell: UITableViewCell {
         return stackView
     }()
     
-    private let containerView: UIView = {
+    private lazy var containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .ypBackground
         view.layer.masksToBounds = true
         return view
     }()
     
-    private let titleLabel: UILabel = {
+    private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .regular)
         label.textColor = .ypBlack
         return label
     }()
     
-    private let daySwitch: UISwitch = {
+    private lazy var daySwitch: UISwitch = {
         let toggler = UISwitch()
         toggler.isOn = false
         toggler.onTintColor = .ypBlue
         return toggler
     }()
     
-    private let separatorView: UIView = {
+    private lazy var separatorView: UIView = {
         let view = UIView()
         view.backgroundColor = .ypGray
         return view
@@ -78,13 +78,13 @@ final class ScheduleCell: UITableViewCell {
     }
     
     private func setupConstraints() {
-        disableAutoresizingMaskForViews([
+        [
             hStackView,
             containerView,
             titleLabel,
             daySwitch,
             separatorView
-        ])
+        ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
             daySwitch.widthAnchor.constraint(equalToConstant: 51),

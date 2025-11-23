@@ -21,7 +21,7 @@ final class TrackerCell: UICollectionViewCell {
         return view
     }()
     
-    private let emojiLabel: UILabel = {
+    private lazy var emojiLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textAlignment = .center
@@ -34,7 +34,7 @@ final class TrackerCell: UICollectionViewCell {
         return label
     }()
     
-    private let titleLabel: UILabel = {
+    private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypWhite
@@ -120,14 +120,14 @@ final class TrackerCell: UICollectionViewCell {
     // MARK: - Setup Constraints
     
     private func setupConstraints() {
-        disableAutoresizingMaskForViews([
+        [
             cardView,
             emojiLabel,
             titleLabel,
             quanityLabel,
             completeButton,
             quanityStackView
-        ])
+        ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
             cardView.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor),

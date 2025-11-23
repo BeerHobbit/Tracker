@@ -12,7 +12,7 @@ final class EnterNameCell: UITableViewCell {
     
     // MARK: - Views
     
-    private let nameTextField: UITextField = {
+    private lazy var nameTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "Введите название трекера"
         textField.font = .systemFont(ofSize: 17, weight: .regular)
@@ -23,7 +23,7 @@ final class EnterNameCell: UITableViewCell {
         return textField
     }()
     
-    private let containerView: UIView = {
+    private lazy var containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .ypBackground
         view.layer.masksToBounds = true
@@ -31,7 +31,7 @@ final class EnterNameCell: UITableViewCell {
         return view
     }()
     
-    private let errorLabel: UILabel = {
+    private lazy var errorLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .regular)
         label.textColor = .ypRed
@@ -85,12 +85,12 @@ final class EnterNameCell: UITableViewCell {
     // MARK: - Setup Constraints
     
     private func setupConstraints() {
-        disableAutoresizingMaskForViews([
+        [
             nameTextField,
             containerView,
             errorLabel,
             stackView
-        ])
+        ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
             stackView.topAnchor.constraint(equalTo: contentView.topAnchor),
@@ -119,7 +119,7 @@ final class EnterNameCell: UITableViewCell {
     
     @objc private func nameTextFieldEditingChanged() {
         let text = nameTextField.text ?? ""
-        _ = isTooLong(string: text)
+        errorLabel.isHidden = !isTooLong(string: text)
         performTableViewUpdates()
         delegate?.enterNameCell(self, didChangeText: text)
     }
@@ -131,11 +131,8 @@ final class EnterNameCell: UITableViewCell {
     }
     
     private func isTooLong(string: String) -> Bool {
-        let isTooLong = string.count > maxCharacters
-        errorLabel.isHidden = !isTooLong
-        return isTooLong
+        return string.count > maxCharacters
     }
-    
 }
 
 // MARK: - UITextFieldDelegate
@@ -149,6 +146,7 @@ extension EnterNameCell: UITextFieldDelegate {
         
         let isLong = isTooLong(string: updatedText)
         if isLong {
+            errorLabel.isHidden = !isLong
             performTableViewUpdates()
         }
         return !isLong

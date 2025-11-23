@@ -8,7 +8,7 @@ final class ScheduleViewController: UIViewController {
     
     // MARK: - Views
     
-    private let scheduleTableView: UITableView = {
+    private lazy var scheduleTableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
         tableView.backgroundColor = .ypWhite
         tableView.register(ScheduleCell.self, forCellReuseIdentifier: ScheduleCell.reuseID)
@@ -17,7 +17,7 @@ final class ScheduleViewController: UIViewController {
         return tableView
     }()
     
-    private let readyButton: UIButton = {
+    private lazy var readyButton: UIButton = {
         let button = UIButton()
         button.setTitle("Готово", for: .normal)
         button.setTitleColor(.ypWhite, for: .normal)
@@ -75,10 +75,10 @@ final class ScheduleViewController: UIViewController {
     // MARK: Setup Constraints
     
     private func setupConstraints() {
-        disableAutoresizingMaskForViews([
+        [
             scheduleTableView,
             readyButton
-        ])
+        ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
             scheduleTableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),

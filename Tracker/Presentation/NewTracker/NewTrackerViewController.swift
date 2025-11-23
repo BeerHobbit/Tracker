@@ -18,7 +18,7 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - Views
     
-    private let tableView: UITableView = {
+    private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
         
         tableView.register(EnterNameCell.self, forCellReuseIdentifier: EnterNameCell.reuseID)
@@ -33,7 +33,7 @@ final class NewTrackerViewController: UIViewController {
         return tableView
     }()
     
-    private let cancelButton: UIButton = {
+    private lazy var cancelButton: UIButton = {
         let button = UIButton()
         
         button.setTitle("Отменить", for: .normal)
@@ -49,7 +49,7 @@ final class NewTrackerViewController: UIViewController {
         return button
     }()
     
-    private let createButton: UIButton = {
+    private lazy var createButton: UIButton = {
         let button = UIButton()
         
         button.setTitle("Создать", for: .normal)
@@ -134,10 +134,10 @@ final class NewTrackerViewController: UIViewController {
     // MARK: - Setup Constraints
     
     private func setupConstraints() {
-        disableAutoresizingMaskForViews([
+        [
             tableView,
             buttonStackView
-        ])
+        ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),

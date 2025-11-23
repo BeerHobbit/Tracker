@@ -4,7 +4,7 @@ final class TrackersListViewController: UIViewController {
     
     // MARK: - Views
     
-    private let addTrackerButton: UIButton = {
+    private lazy var addTrackerButton: UIButton = {
         let button = UIButton()
         let image = UIImage.addTracker.withRenderingMode(.alwaysTemplate)
         button.setImage(image, for: .normal)
@@ -39,19 +39,19 @@ final class TrackersListViewController: UIViewController {
         return view
     }()
     
-    private let searchController: UISearchController = {
+    private lazy var searchController: UISearchController = {
         let searchController = UISearchController(searchResultsController: nil)
         searchController.searchBar.placeholder = "Поиск"
         return searchController
     }()
     
-    private let emptyStateImageView: UIImageView = {
+    private lazy var emptyStateImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = .emptyState
         return imageView
     }()
     
-    private let emptyStateLabel: UILabel = {
+    private lazy var emptyStateLabel: UILabel = {
         let label = UILabel()
         label.text = "Что будем отслеживать?"
         label.font = .systemFont(ofSize: 12, weight: .medium)
@@ -67,7 +67,7 @@ final class TrackersListViewController: UIViewController {
         return stackView
     }()
     
-    private let trackersCollectionView: UICollectionView = {
+    private lazy var trackersCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
@@ -77,7 +77,7 @@ final class TrackersListViewController: UIViewController {
         return collectionView
     }()
     
-    private let filterButton: UIButton = {
+    private lazy var filterButton: UIButton = {
         let button = UIButton()
         button.setTitle("Фильтры", for: .normal)
         button.setTitleColor(.white, for: .normal)
@@ -168,14 +168,14 @@ final class TrackersListViewController: UIViewController {
     // MARK: - Setup Constraints
     
     private func setupConstraints() {
-        disableAutoresizingMaskForViews([
+        [
             dateContainerView,
             emptyStateLabel,
             emptyStateImageView,
             emptyStateStackView,
             trackersCollectionView,
             filterButton
-        ])
+        ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
             addTrackerButton.heightAnchor.constraint(equalToConstant: 42),
@@ -212,13 +212,13 @@ final class TrackersListViewController: UIViewController {
     
     // MARK: - Actions
     
-    @objc func datePickerValueChanged(_ sender: UIDatePicker) {
+    @objc private func datePickerValueChanged(_ sender: UIDatePicker) {
         let selectedDate = sender.date.excludeTime()
         dateLabel.text = dateFormatter.string(from: selectedDate)
         filterTrackers(for: selectedDate)
     }
     
-    @objc func addTrackerButtonDidTap() {
+    @objc private func addTrackerButtonDidTap() {
         let newTrackerVC = NewTrackerViewController()
         newTrackerVC.delegate = self
         let navigationVC = UINavigationController(rootViewController: newTrackerVC)
@@ -256,11 +256,11 @@ final class TrackersListViewController: UIViewController {
     }
     
     private func filterTrackers(for weekday: Weekday) {
-        var filteredCategories = categories
-        for index in filteredCategories.indices {
-            filteredCategories[index].trackers = filteredCategories[index].trackers.filter { $0.schedule.contains(weekday) }
+        let filteredCategories: [TrackerCategory] = categories.compactMap { category in
+            let filteredTrackers = category.trackers.filter { $0.schedule.contains(weekday) }
+            guard !filteredTrackers.isEmpty else { return nil }
+            return TrackerCategory(title: category.title, trackers: filteredTrackers)
         }
-        filteredCategories = filteredCategories.filter { !$0.trackers.isEmpty }
         visibleCategories = filteredCategories
         trackersCollectionView.reloadData()
     }
@@ -388,7 +388,12 @@ extension TrackersListViewController: NewTrackerViewControllerDelegate {
             emoji: config.emoji,
             schedule: config.schedule
         )
-        categories[0].trackers.append(tracker)
+        let oldCategory = categories[0]
+        let updatedCategory = TrackerCategory(
+            title: oldCategory.title,
+            trackers: oldCategory.trackers + [tracker]
+        )
+        categories[0] = updatedCategory
         filterTrackers(for: datePicker.date)
     }
     

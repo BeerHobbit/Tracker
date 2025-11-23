@@ -26,7 +26,7 @@ final class ParameterCell: UITableViewCell {
         return stackView
     }()
     
-    private let containerView: UIView = {
+    private lazy var containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .ypBackground
         view.layer.masksToBounds = true
@@ -34,27 +34,27 @@ final class ParameterCell: UITableViewCell {
         return view
     }()
     
-    private let titleLabel: UILabel = {
+    private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .regular)
         label.textColor = .ypBlack
         return label
     }()
     
-    private let subtitleLabel: UILabel = {
+    private lazy var subtitleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .regular)
         label.textColor = .ypGray
         return label
     }()
     
-    private let iconImageView: UIImageView = {
+    private lazy var iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = .chevron
         return imageView
     }()
     
-    private let separatorView: UIView = {
+    private lazy var separatorView: UIView = {
         let view = UIView()
         view.backgroundColor = .ypGray
         return view
@@ -102,7 +102,7 @@ final class ParameterCell: UITableViewCell {
     // MARK: - Setup Constraints
     
     private func setupConstraints() {
-        disableAutoresizingMaskForViews([
+        [
             vStackView,
             hStackView,
             containerView,
@@ -110,7 +110,7 @@ final class ParameterCell: UITableViewCell {
             subtitleLabel,
             iconImageView,
             separatorView
-        ])
+        ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
             iconImageView.widthAnchor.constraint(equalToConstant: 24),
