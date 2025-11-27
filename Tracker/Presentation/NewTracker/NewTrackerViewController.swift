@@ -19,14 +19,6 @@ final class NewTrackerViewController: UIViewController {
         case schedule(ParameterItem)
     }
     
-    private enum SectionType: Int, CaseIterable {
-        case enterName, parameters
-    }
-    
-    private enum ParameterType: Int, CaseIterable {
-        case category, schedule
-    }
-    
     // MARK: - Views
     
     private lazy var tableView: UITableView = {

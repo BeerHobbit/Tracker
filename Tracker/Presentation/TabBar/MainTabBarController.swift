@@ -31,7 +31,7 @@ final class MainTabBarController: UITabBarController {
     // MARK: - Private Methods
     
     private func buildTabBarControllers() {
-        let trackersListVC = TrackersListViewController()
+        let trackersListVC = TrackerListViewController()
         let trackersNavigationVC = UINavigationController(rootViewController: trackersListVC)
         trackersNavigationVC.tabBarItem = UITabBarItem(
             title: "Трекеры",

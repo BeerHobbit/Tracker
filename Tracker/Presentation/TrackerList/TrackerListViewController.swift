@@ -1,6 +1,6 @@
 import UIKit
 
-final class TrackersListViewController: UIViewController {
+final class TrackerListViewController: UIViewController {
     
     // MARK: - Views
     
@@ -287,7 +287,7 @@ final class TrackersListViewController: UIViewController {
 
 // MARK: - UICollectionViewDataSource
 
-extension TrackersListViewController: UICollectionViewDataSource {
+extension TrackerListViewController: UICollectionViewDataSource {
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return visibleCategories.count
@@ -324,7 +324,7 @@ extension TrackersListViewController: UICollectionViewDataSource {
 
 // MARK: - UICollectionViewDelegateFlowLayout
 
-extension TrackersListViewController: UICollectionViewDelegateFlowLayout {
+extension TrackerListViewController: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let availableWidth = collectionView.frame.width - layoutParams.paddingWidth
@@ -358,7 +358,7 @@ extension TrackersListViewController: UICollectionViewDelegateFlowLayout {
 
 // MARK: - TrackerCellDelegate
 
-extension TrackersListViewController: TrackerCellDelegate {
+extension TrackerListViewController: TrackerCellDelegate {
     
     func completeButtonDidTap(in cell: TrackerCell) {
         let currentDate = datePicker.date
@@ -382,7 +382,7 @@ extension TrackersListViewController: TrackerCellDelegate {
 
 // MARK: - NewTrackerViewControllerDelegate
 
-extension TrackersListViewController: NewTrackerViewControllerDelegate {
+extension TrackerListViewController: NewTrackerViewControllerDelegate {
     
     func createTracker(from config: NewTrackerState) {
         let tracker = Tracker(
