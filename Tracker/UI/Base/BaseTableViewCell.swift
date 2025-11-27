@@ -1,24 +1,11 @@
 import UIKit
 
-final class ParameterCell: UITableViewCell {
-    
-    // MARK: - Identifier
-    
-    static let reuseID = "ParametersReuseIdentifier"
+class BaseTableViewCell: UITableViewCell {
     
     // MARK: - Views
     
-    private lazy var vStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
-        stackView.axis = .vertical
-        stackView.spacing = 2
-        stackView.alignment = .leading
-        stackView.distribution = .fill
-        return stackView
-    }()
-    
-    private lazy var hStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [vStackView, UIView(), iconImageView])
+    lazy var hStackView: UIStackView = {
+        let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.spacing = 0
         stackView.alignment = .center
@@ -30,28 +17,7 @@ final class ParameterCell: UITableViewCell {
         let view = UIView()
         view.backgroundColor = .ypBackground
         view.layer.masksToBounds = true
-        view.layer.cornerRadius = 16
         return view
-    }()
-    
-    private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 17, weight: .regular)
-        label.textColor = .ypBlack
-        return label
-    }()
-    
-    private lazy var subtitleLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 17, weight: .regular)
-        label.textColor = .ypGray
-        return label
-    }()
-    
-    private lazy var iconImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = .chevron
-        return imageView
     }()
     
     private lazy var separatorView: UIView = {
@@ -60,25 +26,10 @@ final class ParameterCell: UITableViewCell {
         return view
     }()
     
-    // MARK: - Private Properties
-    
-    private var title: String = "" {
-        didSet {
-            titleLabel.text = title
-        }
-    }
-    
-    private var subtitle: String = "" {
-        didSet {
-            subtitleLabel.text = subtitle
-            subtitleLabel.isHidden = subtitle.isEmpty
-        }
-    }
-    
     // MARK: - Initializer
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super .init(style: style, reuseIdentifier: reuseIdentifier)
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
     }
     
@@ -88,34 +39,30 @@ final class ParameterCell: UITableViewCell {
     
     // MARK: - Setup UI
     
-    private func setupUI() {
+    func setupUI() {
         selectionStyle = .none
+        setupSubviews()
+        setupConstraints()
+    }
+    
+    func setupSubviews() {
         contentView.addSubview(containerView)
         containerView.addSubviews([
             hStackView,
             separatorView
         ])
-        
-        setupConstraints()
     }
     
     // MARK: - Setup Constraints
     
-    private func setupConstraints() {
+    func setupConstraints() {
         [
-            vStackView,
             hStackView,
             containerView,
-            titleLabel,
-            subtitleLabel,
-            iconImageView,
             separatorView
         ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
-            iconImageView.widthAnchor.constraint(equalToConstant: 24),
-            iconImageView.heightAnchor.constraint(equalTo: iconImageView.widthAnchor),
-            
             hStackView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
             hStackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
             hStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16),
@@ -133,18 +80,13 @@ final class ParameterCell: UITableViewCell {
         ])
     }
     
-    // MARK: - Public Methods
-    
-    func configure(parameter: NewTrackerParameter) {
-        title = parameter.title
-        subtitle = parameter.subtitle
-        
-        if parameter.isFirst {
+    func configAppearance(isFirst: Bool, isLast: Bool) {
+        if isFirst {
             containerView.layer.cornerRadius = 16
             containerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
             separatorView.isHidden = false
         }
-        if parameter.isLast {
+        if isLast {
             containerView.layer.cornerRadius = 16
             containerView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
             separatorView.isHidden = true
