@@ -8,6 +8,8 @@ final class CustomizationCell: UITableViewCell {
     
     // MARK: - Delegate
     
+    weak var delegate: CustomizationCellDelegate?
+    
     // MARK: - Types
     
     private enum Section {
@@ -35,14 +37,13 @@ final class CustomizationCell: UITableViewCell {
     
     private var emoji: String = "" {
         didSet {
-            print(emoji)
+            delegate?.customizationCell(didChangeEmoji: emoji)
         }
     }
     
     private var color: UIColor? = nil {
         didSet {
-            guard let color = color else { return }
-            print(color)
+            delegate?.customizationCell(didChangeColor: color)
         }
     }
     
@@ -93,6 +94,18 @@ final class CustomizationCell: UITableViewCell {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Overrides
+    
+    override func systemLayoutSizeFitting(
+        _ targetSize: CGSize,
+        withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority,
+        verticalFittingPriority: UILayoutPriority
+    ) -> CGSize {
+        layoutIfNeeded()
+        let height = customizationCollectionView.collectionViewLayout.collectionViewContentSize.height
+        return CGSize(width: targetSize.width, height: height)
     }
     
     // MARK: - Configure Dependencies
@@ -213,8 +226,8 @@ extension CustomizationCell: UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let section = indexPath.section
-        if let oldIndexPath = selectedIndexPaths[section],
-           oldIndexPath != indexPath {
+        
+        if let oldIndexPath = selectedIndexPaths[section] {
             collectionView.deselectItem(at: oldIndexPath, animated: false)
         }
         selectedIndexPaths[section] = indexPath
@@ -224,6 +237,18 @@ extension CustomizationCell: UICollectionViewDelegate {
             emoji = item.emojis[indexPath.item]
         case .colors(let item):
             color = item.colors[indexPath.item]
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        let section = indexPath.section
+        selectedIndexPaths[section] = nil
+        
+        switch sections[section] {
+        case .emojis(_):
+            emoji = ""
+        case .colors(_):
+            color = nil
         }
     }
     

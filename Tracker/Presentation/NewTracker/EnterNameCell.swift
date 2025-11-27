@@ -119,8 +119,16 @@ final class EnterNameCell: UITableViewCell {
     
     @objc private func nameTextFieldEditingChanged() {
         let text = nameTextField.text ?? ""
-        errorLabel.isHidden = !isTooLong(string: text)
-        performTableViewUpdates()
+        
+        let isLong = isTooLong(string: text)
+        let wasHidden = errorLabel.isHidden
+        let shouldBeHidden = !isLong
+        
+        errorLabel.isHidden = shouldBeHidden
+        if wasHidden != shouldBeHidden {
+            performTableViewUpdates()
+        }
+        
         delegate?.enterNameCell(self, didChangeText: text)
     }
     

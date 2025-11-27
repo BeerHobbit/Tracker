@@ -142,6 +142,7 @@ final class ParameterCell: UITableViewCell {
         if parameter.isFirst {
             containerView.layer.cornerRadius = 16
             containerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+            separatorView.isHidden = false
         }
         if parameter.isLast {
             containerView.layer.cornerRadius = 16

@@ -9,9 +9,9 @@ struct NewTrackerState {
     
     var isReady: Bool {
         !title.isEmpty &&
-        !schedule.isEmpty //&&
-        //!category.isEmpty &&
-        //!emoji.isEmpty &&
-        //color != nil
+        !schedule.isEmpty &&
+        !category.isEmpty &&
+        !emoji.isEmpty &&
+        color != nil
     }
 }

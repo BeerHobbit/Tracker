@@ -89,8 +89,8 @@ final class NewTrackerViewController: UIViewController {
         title: "",
         category: "Важное",
         schedule: [],
-        emoji: "🤯",
-        color: .colorSelection1
+        emoji: "",
+        color: nil
     ) {
         didSet {
             createButton.isEnabled = state.isReady
@@ -208,26 +208,13 @@ final class NewTrackerViewController: UIViewController {
         navigationController?.pushViewController(scheduleVC, animated: true)
     }
     
-    private func indexPathForSchedule(sections: [Section]) -> IndexPath? {
-        for (sectionIndex, section) in sections.enumerated() {
-            if case let .parameters(items) = section {
-                if let itemIndex = items.firstIndex(where: {
-                    if case .schedule = $0 { return true }
-                    return false
-                }) {
-                    return IndexPath(item: itemIndex, section: sectionIndex)
-                }
-            }
-        }
-        return nil
-    }
-    
     private func makeEnterNameCell(_ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: EnterNameCell.reuseID, for: indexPath) as? EnterNameCell else {
             assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(EnterNameCell.reuseID) as \(String(describing: EnterNameCell.self))")
             return UITableViewCell()
         }
         cell.delegate = self
+        
         return cell
     }
     
@@ -246,6 +233,8 @@ final class NewTrackerViewController: UIViewController {
             assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(CustomizationCell.reuseID) as \(String(describing: CustomizationCell.self))")
             return UITableViewCell()
         }
+        cell.delegate = self
+        
         return cell
     }
     
@@ -330,7 +319,10 @@ extension NewTrackerViewController: UITableViewDelegate {
     }
   
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return 24
+        switch sections[section] {
+        case .customization: return 32
+        default: return 24
+        }
     }
     
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
@@ -342,14 +334,14 @@ extension NewTrackerViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return UITableView.automaticDimension
+    }
+    
+    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         switch sections[indexPath.section] {
-        case .enterName: return UITableView.automaticDimension
-        case .parameters(_): return UITableView.automaticDimension
-        case .customization:
-            let width = tableView.frame.width
-            let cell = CustomizationCell(frame: CGRect(x: 0, y: 0, width: Int(width), height: 0))
-            let targetSize = cell.systemLayoutSizeFitting(CGSize(width: width, height: UITableViewCell.layoutFittingExpandedSize.height))
-            return targetSize.height
+        case .enterName: return 75
+        case .parameters(_): return 75
+        case .customization: return 460
         }
     }
     
@@ -376,8 +368,19 @@ extension NewTrackerViewController: ScheduleViewControllerDelegate {
     
     func getConfiguredSchedule(_ schedule: Set<Weekday>) {
         state.schedule = schedule
-        guard let indexPath = indexPathForSchedule(sections: sections) else { return }
-        tableView.reloadRows(at: [indexPath], with: .none)
+        tableView.reloadData()
+    }
+    
+}
+
+extension NewTrackerViewController: CustomizationCellDelegate {
+    
+    func customizationCell(didChangeEmoji emoji: String) {
+        state.emoji = emoji
+    }
+    
+    func customizationCell(didChangeColor color: UIColor?) {
+        state.color = color
     }
     
 }

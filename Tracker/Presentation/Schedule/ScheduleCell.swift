@@ -129,6 +129,7 @@ final class ScheduleCell: UITableViewCell {
         if isFirst {
             containerView.layer.cornerRadius = 16
             containerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+            separatorView.isHidden = false
         }
         if isLast {
             containerView.layer.cornerRadius = 16
