@@ -56,6 +56,7 @@ final class TrackerListViewController: UIViewController {
         label.text = "Что будем отслеживать?"
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypBlack
+        label.textAlignment = .center
         return label
     }()
     
@@ -105,12 +106,7 @@ final class TrackerListViewController: UIViewController {
         cellSpacing: 10
     )
     
-    private var categories: [TrackerCategory] = [
-        TrackerCategory(
-            title: "Важное",
-            trackers: []
-        )
-    ]
+    private var categories: [TrackerCategory] = []
     
     private var visibleCategories: [TrackerCategory] = [] {
         didSet {
@@ -392,12 +388,22 @@ extension TrackerListViewController: NewTrackerViewControllerDelegate {
             emoji: config.emoji,
             schedule: config.schedule
         )
-        let oldCategory = categories[0]
-        let updatedCategory = TrackerCategory(
-            title: oldCategory.title,
-            trackers: oldCategory.trackers + [tracker]
-        )
-        categories[0] = updatedCategory
+        
+        if let oldCategoryIndex = categories.firstIndex(where: { $0.title == config.category }) {
+            let oldCategory = categories[oldCategoryIndex]
+            let updatedCategory = TrackerCategory(
+                title: oldCategory.title,
+                trackers: oldCategory.trackers + [tracker]
+            )
+            categories[oldCategoryIndex] = updatedCategory
+        } else {
+            let newCategory = TrackerCategory(
+                title: config.category,
+                trackers: [tracker]
+            )
+            categories.append(newCategory)
+        }
+        
         filterTrackers(for: datePicker.date)
     }
     

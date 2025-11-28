@@ -2,6 +2,10 @@ import UIKit
 
 final class CategoryListViewController: UIViewController {
     
+    // MARK: - Delegate
+    
+    weak var delegate: CategoryListViewControllerDelegate?
+    
     // MARK: - Views
     
     private lazy var emptyStateImageView: UIImageView = {
@@ -13,6 +17,8 @@ final class CategoryListViewController: UIViewController {
     private lazy var emptyStateLabel: UILabel = {
         let label = UILabel()
         label.text = "Привычки и события можно объединить по смыслу"
+        label.numberOfLines = 2
+        label.textAlignment = .center
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypBlack
         return label
@@ -41,12 +47,31 @@ final class CategoryListViewController: UIViewController {
     
     private lazy var categoriesTableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
-        tableView.backgroundColor = .ypWhite
-        tableView.register(ScheduleCell.self, forCellReuseIdentifier: ScheduleCell.reuseID)
+        tableView.backgroundColor = .clear
+        tableView.register(CategoryCell.self, forCellReuseIdentifier: CategoryCell.reuseID)
         tableView.separatorStyle = .none
         tableView.rowHeight = 75
+        tableView.allowsSelection = true
+        tableView.allowsMultipleSelection = false
         return tableView
     }()
+    
+    // MARK: - Private Properties
+    
+    var categories:[String] = [
+        "Важное", "Здоровье", "Гигиена",
+        "Отдых", "Хобби", "Друзья"
+    ] {
+        didSet {
+            updateEmptyState()
+        }
+    }
+    
+    var selectedCategory: String = "" {
+        didSet {
+            delegate?.categoryListVC(didSelectCategory: selectedCategory)
+        }
+    }
     
     // MARK: - Life Cycle
     
@@ -54,17 +79,27 @@ final class CategoryListViewController: UIViewController {
         super.viewDidLoad()
         configDependencies()
         setupUI()
+        updateEmptyState()
     }
     
     // MARK: - Configure Dependencies
     
     private func configDependencies() {
-        
+        categoriesTableView.dataSource = self
+        categoriesTableView.delegate = self
     }
     
     // MARK: - Setup UI
     
     private func setupUI() {
+        view.backgroundColor = .ypWhite
+        
+        view.addSubviews([
+            emptyStateStackView,
+            addCategoryButton,
+            categoriesTableView
+        ])
+        
         setupNavigationBar()
         setupConstraints()
         setupActions()
@@ -76,12 +111,39 @@ final class CategoryListViewController: UIViewController {
             .foregroundColor: UIColor.ypBlack,
             .font: UIFont.systemFont(ofSize: 16, weight: .medium)
         ]
+        navigationItem.hidesBackButton = true
     }
     
     // MARK: - Setup Constraints
     
     private func setupConstraints() {
+        [
+            emptyStateLabel,
+            emptyStateImageView,
+            emptyStateStackView,
+            addCategoryButton,
+            categoriesTableView
+        ].disableAutoresizingMasks()
         
+        NSLayoutConstraint.activate([
+            emptyStateImageView.heightAnchor.constraint(equalToConstant: 80),
+            emptyStateImageView.widthAnchor.constraint(equalTo: emptyStateImageView.heightAnchor),
+            
+            emptyStateLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 200),
+            
+            emptyStateStackView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            emptyStateStackView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
+            
+            addCategoryButton.heightAnchor.constraint(equalToConstant: 60),
+            addCategoryButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            addCategoryButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            addCategoryButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            
+            categoriesTableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            categoriesTableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            categoriesTableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            categoriesTableView.bottomAnchor.constraint(equalTo: addCategoryButton.topAnchor, constant: -16)
+        ])
     }
     
     // MARK: - Setup Actions
@@ -91,6 +153,54 @@ final class CategoryListViewController: UIViewController {
     }
     
     // MARK: - Actions
+    
+    
+    
+    // MARK: - Private Methods
+    
+    private func updateEmptyState() {
+        emptyStateStackView.isHidden = !categories.isEmpty
+    }
+    
+}
+
+extension CategoryListViewController: UITableViewDataSource {
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return categories.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: CategoryCell.reuseID) as? CategoryCell else {
+            assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(CategoryCell.reuseID) as \(String(describing: CategoryCell.self))")
+            return UITableViewCell()
+        }
+        let title = categories[indexPath.row]
+        let isFirst = indexPath.row == 0
+        let isLast = indexPath.row == categories.count - 1
+        cell.configure(title: title, isFirst: isFirst, isLast: isLast)
+        
+        return cell
+    }
+    
+}
+
+extension CategoryListViewController: UITableViewDelegate {
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let cell = tableView.cellForRow(at: indexPath) as? CategoryCell
+        cell?.setSelection(true)
+        
+        let category = categories[indexPath.row]
+        selectedCategory = category
+        
+        navigationController?.popToRootViewController(animated: true)
+    }
+    
+    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+        let cell = tableView.cellForRow(at: indexPath) as? CategoryCell
+        cell?.setSelection(false)
+    }
     
 }
 

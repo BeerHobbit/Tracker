@@ -31,11 +31,7 @@ final class ParameterCell: BaseTableViewCell {
         return label
     }()
     
-    private lazy var iconImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = .chevron
-        return imageView
-    }()
+    private lazy var iconImageView = UIImageView(image: .chevron)
     
     // MARK: - Private Properties
     

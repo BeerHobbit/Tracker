@@ -79,7 +79,7 @@ final class NewTrackerViewController: UIViewController {
     
     private var state = NewTrackerState(
         title: "",
-        category: "Важное",
+        category: "",
         schedule: [],
         emoji: "",
         color: nil
@@ -93,6 +93,7 @@ final class NewTrackerViewController: UIViewController {
     // MARK: - Private Properties
     
     private lazy var scheduleVC: ScheduleViewController? = ScheduleViewController()
+    private lazy var categoryListVC: CategoryListViewController? = CategoryListViewController()
     
     private let sections: [Section] = [
         .enterName,
@@ -118,6 +119,7 @@ final class NewTrackerViewController: UIViewController {
         tableView.delegate = self
         
         scheduleVC?.delegate = self
+        categoryListVC?.delegate = self
     }
     
     // MARK: - Setup UI
@@ -198,6 +200,11 @@ final class NewTrackerViewController: UIViewController {
     private func pushToScheduleVC() {
         guard let scheduleVC = scheduleVC else { return }
         navigationController?.pushViewController(scheduleVC, animated: true)
+    }
+    
+    private func pushToCategoryListVC() {
+        guard let categoryListVC = categoryListVC else { return }
+        navigationController?.pushViewController(categoryListVC, animated: true)
     }
     
     private func makeEnterNameCell(_ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
@@ -299,7 +306,7 @@ extension NewTrackerViewController: UITableViewDelegate {
         switch sections[indexPath.section] {
         case .parameters(let items):
             switch items[indexPath.row] {
-            case .category(_): return
+            case .category(_): pushToCategoryListVC()
             case .schedule(_): pushToScheduleVC()
             }
         default: return
@@ -373,6 +380,15 @@ extension NewTrackerViewController: CustomizationCellDelegate {
     
     func customizationCell(didChangeColor color: UIColor?) {
         state.color = color
+    }
+    
+}
+
+extension NewTrackerViewController: CategoryListViewControllerDelegate {
+    
+    func categoryListVC(didSelectCategory category: String) {
+        state.category = category
+        tableView.reloadData()
     }
     
 }
