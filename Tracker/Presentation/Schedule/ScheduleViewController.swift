@@ -128,9 +128,10 @@ extension ScheduleViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         let weekday = weekdays[indexPath.row]
+        let isIncluded = chosenWeekdays.contains(weekday)
         let isFirst = indexPath.row == 0
         let isLast = indexPath.row == weekdays.count - 1
-        cell.configure(weekday: weekday, isFirst: isFirst, isLast: isLast)
+        cell.configure(weekday: weekday, isIncluded: isIncluded, isFirst: isFirst, isLast: isLast)
         cell.delegate = self
         return cell
     }

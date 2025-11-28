@@ -40,10 +40,10 @@ final class CategoryCell: BaseTableViewCell {
         ])
     }
     
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        checkImageView.isHidden = true
-    }
+ //   override func prepareForReuse() {
+ //       super.prepareForReuse()
+ //       checkImageView.isHidden = true
+ //   }
     
     // MARK: - Public Methods
     

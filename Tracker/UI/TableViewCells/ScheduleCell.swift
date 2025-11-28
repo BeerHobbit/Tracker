@@ -71,9 +71,10 @@ final class ScheduleCell: BaseTableViewCell {
     
     // MARK: - Public Methods
     
-    func configure(weekday: Weekday, isFirst: Bool, isLast: Bool) {
+    func configure(weekday: Weekday, isIncluded: Bool, isFirst: Bool, isLast: Bool) {
         cellWeekday = weekday
         titleLabel.text = weekday.longString
+        daySwitch.isOn = isIncluded
         configAppearance(isFirst: isFirst, isLast: isLast)
     }
     
