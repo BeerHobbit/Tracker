@@ -62,7 +62,6 @@ final class NewTrackerViewController: UIViewController {
         button.layer.cornerRadius = 16
         
         button.isEnabled = false
-        
         return button
     }()
     
@@ -350,7 +349,7 @@ extension NewTrackerViewController: UITableViewDelegate {
 
 extension NewTrackerViewController: EnterNameCellDelegate {
     
-    func enterNameCell(_ cell: EnterNameCell, didChangeText text: String) {
+    func enterNameCell(didChangeText text: String) {
         state.title = text
     }
     

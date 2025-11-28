@@ -4,7 +4,7 @@ final class EnterNameCell: UITableViewCell {
     
     // MARK: - Identifier
     
-    static let reuseID = "EnterNameReuseIdentifier"
+    static let reuseID = "EnterNameCellReuseIdentifier"
     
     // MARK: - Delegate
     
@@ -129,7 +129,7 @@ final class EnterNameCell: UITableViewCell {
             performTableViewUpdates()
         }
         
-        delegate?.enterNameCell(self, didChangeText: text)
+        delegate?.enterNameCell(didChangeText: text)
     }
     
     // MARK: - Private Methods

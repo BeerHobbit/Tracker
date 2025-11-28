@@ -1,19 +1,23 @@
 import UIKit
 
-final class ScheduleViewController: UIViewController {
+final class NewCategoryViewController: UIViewController {
     
     // MARK: - Delegate
     
-    weak var delegate: ScheduleViewControllerDelegate?
+    weak var delegate: NewCategoryViewControllerDelegate?
     
     // MARK: - Views
     
-    private lazy var scheduleTableView: UITableView = {
+    private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
-        tableView.backgroundColor = .ypWhite
-        tableView.register(ScheduleCell.self, forCellReuseIdentifier: ScheduleCell.reuseID)
-        tableView.separatorStyle = .none
         tableView.rowHeight = 75
+        tableView.allowsSelection = false
+        tableView.separatorStyle = .none
+        tableView.backgroundColor = .ypWhite
+        tableView.keyboardDismissMode = .onDrag
+        
+        tableView.register(EnterNewCategoryCell.self, forCellReuseIdentifier: EnterNewCategoryCell.reuseID)
+        
         return tableView
     }()
     
@@ -22,18 +26,23 @@ final class ScheduleViewController: UIViewController {
         button.setTitle("Готово", for: .normal)
         button.setTitleColor(.ypWhite, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .ypBlack
+        button.backgroundColor = .ypGray
         
         button.layer.masksToBounds = true
         button.layer.cornerRadius = 16
         
+        button.isEnabled = false
         return button
     }()
     
     // MARK: - Private Properties
     
-    private var weekdays: [Weekday] = Weekday.ordered
-    private var chosenWeekdays: Set<Weekday> = []
+    private var newCategoryTitle: String = "" {
+        didSet {
+            readyButton.isEnabled = !newCategoryTitle.isEmpty
+            readyButton.backgroundColor = readyButton.isEnabled ? .ypBlack : .ypGray
+        }
+    }
     
     // MARK: - Life Cycle
     
@@ -46,45 +55,44 @@ final class ScheduleViewController: UIViewController {
     // MARK: - Configure Dependencies
     
     private func configDependencies() {
-        scheduleTableView.dataSource = self
-        scheduleTableView.delegate = self
+        tableView.dataSource = self
+        tableView.delegate = self
     }
     
     // MARK: - Setup UI
     
     private func setupUI() {
         view.backgroundColor = .ypWhite
+        
         view.addSubviews([
-            scheduleTableView,
+            tableView,
             readyButton
         ])
+        
         setupNavigationBar()
         setupConstraints()
         setupActions()
     }
     
     private func setupNavigationBar() {
-        navigationItem.title = "Расписание"
+        navigationItem.title = "Новая категория"
         navigationController?.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor.ypBlack,
             .font: UIFont.systemFont(ofSize: 16, weight: .medium)
         ]
         navigationItem.hidesBackButton = true
     }
-    
-    // MARK: Setup Constraints
+
+    // MARK: - Setup Constraints
     
     private func setupConstraints() {
-        [
-            scheduleTableView,
-            readyButton
-        ].disableAutoresizingMasks()
+        [tableView, readyButton].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
-            scheduleTableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            scheduleTableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            scheduleTableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            scheduleTableView.bottomAnchor.constraint(equalTo: readyButton.topAnchor, constant: -16),
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: readyButton.topAnchor, constant: -16),
             
             readyButton.heightAnchor.constraint(equalToConstant: 60),
             readyButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
@@ -96,50 +104,51 @@ final class ScheduleViewController: UIViewController {
     // MARK: - Setup Actions
     
     private func setupActions() {
-        readyButton.addTarget(self, action: #selector(readyButtonDidTap), for: .touchUpInside)
+        view.addGestureRecognizer(singleTapRecognizer())
+        readyButton.addTarget(self, action: #selector(didTapReadyButton), for: .touchUpInside)
     }
     
     // MARK: - Actions
     
-    @objc private func readyButtonDidTap() {
-        saveWeekdaysToParameters()
+    @objc private func didSingleTap() {
+        view.endEditing(true)
+    }
+    
+    @objc private func didTapReadyButton() {
+        delegate?.didCreateNewCategory(title: newCategoryTitle)
         navigationController?.popViewController(animated: true)
     }
     
     // MARK: - Private Methods
     
-    private func saveWeekdaysToParameters() {
-        delegate?.getConfiguredSchedule(chosenWeekdays)
+    private func singleTapRecognizer() -> UITapGestureRecognizer {
+        let singleTap = UITapGestureRecognizer(target: self, action: #selector(didSingleTap))
+        singleTap.numberOfTapsRequired = 1
+        singleTap.cancelsTouchesInView = false
+        return singleTap
     }
     
 }
 
-// MARK: - UITableViewDataSource
-
-extension ScheduleViewController: UITableViewDataSource {
+extension NewCategoryViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        weekdays.count
+        return 1
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: ScheduleCell.reuseID, for: indexPath) as? ScheduleCell else {
-            assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(ScheduleCell.reuseID) as \(String(describing: ScheduleCell.self))")
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: EnterNewCategoryCell.reuseID, for: indexPath) as? EnterNewCategoryCell else {
+            assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(EnterNewCategoryCell.reuseID) as \(String(describing: EnterNewCategoryCell.self))")
             return UITableViewCell()
         }
-        let weekday = weekdays[indexPath.row]
-        let isFirst = indexPath.row == 0
-        let isLast = indexPath.row == weekdays.count - 1
-        cell.configure(weekday: weekday, isFirst: isFirst, isLast: isLast)
         cell.delegate = self
+        
         return cell
     }
     
 }
 
-// MARK: - UITableViewDelegate
-
-extension ScheduleViewController: UITableViewDelegate {
+extension NewCategoryViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         return UIView()
@@ -149,26 +158,16 @@ extension ScheduleViewController: UITableViewDelegate {
         return 24
     }
     
-    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        return UIView()
-    }
+}
+
+extension NewCategoryViewController: EnterNewCategoryCellDelegate {
     
-    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return 0
+    func enterNewCategoryCell(didChangeText text: String) {
+        newCategoryTitle = text
     }
     
 }
 
-// MARK: - ScheduleCellDelegate
-
-extension ScheduleViewController: ScheduleCellDelegate {
-    
-    func weekdayInCell(day: Weekday, isIncluded: Bool) {
-        if isIncluded {
-            chosenWeekdays.insert(day)
-        } else {
-            chosenWeekdays.remove(day)
-        }
-    }
-    
+#Preview {
+    UINavigationController(rootViewController: NewCategoryViewController())
 }

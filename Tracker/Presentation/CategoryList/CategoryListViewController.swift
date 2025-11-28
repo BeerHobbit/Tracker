@@ -6,7 +6,7 @@ final class CategoryListViewController: UIViewController {
     
     weak var delegate: CategoryListViewControllerDelegate?
     
-    // MARK: - Views
+    // MARK: - Views and Layout guides
     
     private lazy var emptyStateImageView: UIImageView = {
         let imageView = UIImageView()
@@ -56,12 +56,11 @@ final class CategoryListViewController: UIViewController {
         return tableView
     }()
     
+    
+    
     // MARK: - Private Properties
     
-    var categories:[String] = [
-        "Важное", "Здоровье", "Гигиена",
-        "Отдых", "Хобби", "Друзья"
-    ] {
+    var categories:[String] = [] {
         didSet {
             updateEmptyState()
         }
@@ -149,12 +148,16 @@ final class CategoryListViewController: UIViewController {
     // MARK: - Setup Actions
     
     private func setupActions() {
-        
+        addCategoryButton.addTarget(self, action: #selector(didTapAddCategoryButton), for: .touchUpInside)
     }
     
     // MARK: - Actions
     
-    
+    @objc private func didTapAddCategoryButton() {
+        let newCategoryVC = NewCategoryViewController()
+        newCategoryVC.delegate = self
+        navigationController?.pushViewController(newCategoryVC, animated: true)
+    }
     
     // MARK: - Private Methods
     
@@ -194,12 +197,41 @@ extension CategoryListViewController: UITableViewDelegate {
         let category = categories[indexPath.row]
         selectedCategory = category
         
-        navigationController?.popToRootViewController(animated: true)
+        navigationController?.popViewController(animated: true)
     }
     
     func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
         let cell = tableView.cellForRow(at: indexPath) as? CategoryCell
         cell?.setSelection(false)
+    }
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        return UIView()
+    }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 24
+    }
+    
+}
+
+extension CategoryListViewController: NewCategoryViewControllerDelegate {
+    
+    func didCreateNewCategory(title: String) {
+        let oldLastIndexPath = IndexPath(row: categories.count - 1, section: 0)
+        
+        categories.append(title)
+        let newIndexPath = IndexPath(row: categories.count - 1, section: 0)
+        
+        categoriesTableView.performBatchUpdates({
+            categoriesTableView.insertRows(at: [newIndexPath], with: .automatic)
+            if oldLastIndexPath.row >= 0 {
+                categoriesTableView.reloadRows(at: [oldLastIndexPath], with: .none)
+            }
+        }, completion: { [weak self] _ in
+            guard let self = self else { return }
+            self.categoriesTableView.scrollToRow(at: newIndexPath, at: .bottom, animated: true)
+        })
     }
     
 }

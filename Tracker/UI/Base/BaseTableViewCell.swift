@@ -37,6 +37,15 @@ class BaseTableViewCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - Overrides
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        containerView.layer.cornerRadius = 0
+        containerView.layer.maskedCorners = []
+        separatorView.isHidden = false
+    }
+    
     // MARK: - Setup UI
     
     func setupUI() {
