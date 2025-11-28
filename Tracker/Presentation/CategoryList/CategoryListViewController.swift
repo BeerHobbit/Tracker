@@ -56,7 +56,7 @@ final class CategoryListViewController: UIViewController {
         return tableView
     }()
     
-    
+    private let emptyStateGuide = UILayoutGuide()
     
     // MARK: - Private Properties
     
@@ -98,6 +98,7 @@ final class CategoryListViewController: UIViewController {
             addCategoryButton,
             categoriesTableView
         ])
+        view.addLayoutGuide(emptyStateGuide)
         
         setupNavigationBar()
         setupConstraints()
@@ -125,13 +126,16 @@ final class CategoryListViewController: UIViewController {
         ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
+            emptyStateGuide.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            emptyStateGuide.bottomAnchor.constraint(equalTo: addCategoryButton.topAnchor),
+            
             emptyStateImageView.heightAnchor.constraint(equalToConstant: 80),
             emptyStateImageView.widthAnchor.constraint(equalTo: emptyStateImageView.heightAnchor),
             
             emptyStateLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 200),
             
+            emptyStateStackView.centerYAnchor.constraint(equalTo: emptyStateGuide.centerYAnchor),
             emptyStateStackView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
-            emptyStateStackView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
             
             addCategoryButton.heightAnchor.constraint(equalToConstant: 60),
             addCategoryButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
