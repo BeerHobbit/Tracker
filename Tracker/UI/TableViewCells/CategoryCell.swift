@@ -40,15 +40,17 @@ final class CategoryCell: BaseTableViewCell {
         ])
     }
     
-    // MARK: - Public Methods
-    
-    func configure(title: String, isFirst: Bool, isLast: Bool) {
-        titleLabel.text = title
-        configAppearance(isFirst: isFirst, isLast: isLast)
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        checkImageView.isHidden = true
     }
     
-    func setSelection(_ isSelected: Bool) {
+    // MARK: - Public Methods
+    
+    func configure(title: String, isSelected: Bool, isFirst: Bool, isLast: Bool) {
+        titleLabel.text = title
         checkImageView.isHidden = !isSelected
+        configAppearance(isFirst: isFirst, isLast: isLast)
     }
     
 }

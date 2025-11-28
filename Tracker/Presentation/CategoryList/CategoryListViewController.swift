@@ -60,17 +60,13 @@ final class CategoryListViewController: UIViewController {
     
     // MARK: - Private Properties
     
-    var categories:[String] = [] {
+    private var categories:[String] = [] {
         didSet {
             updateEmptyState()
         }
     }
     
-    var selectedCategory: String = "" {
-        didSet {
-            delegate?.categoryListVC(didSelectCategory: selectedCategory)
-        }
-    }
+    private var selectedIndexPath: IndexPath?
     
     // MARK: - Life Cycle
     
@@ -183,10 +179,11 @@ extension CategoryListViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         let title = categories[indexPath.row]
+        let isSelected = indexPath == selectedIndexPath
         let isFirst = indexPath.row == 0
         let isLast = indexPath.row == categories.count - 1
-        cell.configure(title: title, isFirst: isFirst, isLast: isLast)
         
+        cell.configure(title: title, isSelected: isSelected, isFirst: isFirst, isLast: isLast)
         return cell
     }
     
@@ -195,18 +192,18 @@ extension CategoryListViewController: UITableViewDataSource {
 extension CategoryListViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let cell = tableView.cellForRow(at: indexPath) as? CategoryCell
-        cell?.setSelection(true)
+        let oldIndexPath = selectedIndexPath
+        selectedIndexPath = indexPath
+        
+        var indexPathsToReload: [IndexPath] = [indexPath]
+        if let oldIndexPath = oldIndexPath, oldIndexPath != indexPath {
+            indexPathsToReload.append(oldIndexPath)
+        }
+        tableView.reloadRows(at: indexPathsToReload, with: .none)
         
         let category = categories[indexPath.row]
-        selectedCategory = category
-        
+        delegate?.categoryListVC(didSelectCategory: category)
         navigationController?.popViewController(animated: true)
-    }
-    
-    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
-        let cell = tableView.cellForRow(at: indexPath) as? CategoryCell
-        cell?.setSelection(false)
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {

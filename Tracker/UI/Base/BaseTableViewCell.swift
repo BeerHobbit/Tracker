@@ -90,12 +90,20 @@ class BaseTableViewCell: UITableViewCell {
     }
     
     func configAppearance(isFirst: Bool, isLast: Bool) {
-        if isFirst {
+        if isFirst && isLast {
+            containerView.layer.cornerRadius = 16
+            containerView.layer.maskedCorners = [
+                .layerMinXMinYCorner, .layerMaxXMinYCorner,
+                .layerMinXMaxYCorner, .layerMaxXMaxYCorner
+            ]
+            separatorView.isHidden = true
+        }
+        else if isFirst {
             containerView.layer.cornerRadius = 16
             containerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
             separatorView.isHidden = false
         }
-        if isLast {
+        else if isLast {
             containerView.layer.cornerRadius = 16
             containerView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
             separatorView.isHidden = true
