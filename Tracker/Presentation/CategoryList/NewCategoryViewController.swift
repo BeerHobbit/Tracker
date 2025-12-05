@@ -10,7 +10,6 @@ final class NewCategoryViewController: UIViewController {
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
-        tableView.rowHeight = 75
         tableView.allowsSelection = false
         tableView.separatorStyle = .none
         tableView.backgroundColor = .ypWhite
@@ -130,6 +129,8 @@ final class NewCategoryViewController: UIViewController {
     
 }
 
+// MARK: - UITableViewDataSource
+
 extension NewCategoryViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -148,6 +149,8 @@ extension NewCategoryViewController: UITableViewDataSource {
     
 }
 
+// MARK: - UITableViewDelegate
+
 extension NewCategoryViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -160,10 +163,25 @@ extension NewCategoryViewController: UITableViewDelegate {
     
 }
 
+// MARK: - EnterNewCategoryCellDelegate
+
 extension NewCategoryViewController: EnterNewCategoryCellDelegate {
     
     func enterNewCategoryCell(didChangeText text: String) {
         newCategoryTitle = text
+    }
+    
+    func updateCellLayout() {
+        tableView.beginUpdates()
+        tableView.endUpdates()
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return UITableView.automaticDimension
+    }
+    
+    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 75
     }
     
 }
