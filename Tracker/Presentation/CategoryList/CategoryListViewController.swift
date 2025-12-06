@@ -228,20 +228,12 @@ extension CategoryListViewController: UITableViewDelegate {
 extension CategoryListViewController: NewCategoryViewControllerDelegate {
     
     func didCreateNewCategory(title: String) {
-        let oldLastIndexPath = IndexPath(row: categories.count - 1, section: 0)
-        
-        categories.append(title)
-        let newIndexPath = IndexPath(row: categories.count - 1, section: 0)
-        
-        categoriesTableView.performBatchUpdates({
-            categoriesTableView.insertRows(at: [newIndexPath], with: .automatic)
-            if oldLastIndexPath.row >= 0 {
-                categoriesTableView.reloadRows(at: [oldLastIndexPath], with: .none)
-            }
-        }, completion: { [weak self] _ in
-            guard let self = self else { return }
-            self.categoriesTableView.scrollToRow(at: newIndexPath, at: .bottom, animated: true)
-        })
+        let newCategory = TrackerCategory(id: UUID(), title: title, createdAt: Date())
+        do {
+            try trackerCategoryStore.addNewTrackerCategory(newCategory)
+        } catch {
+            assertionFailure("❌[addNewTrackerCategory]: can't add new object to TrackerCategoryCoreData, error: \(error)")
+        }
     }
     
 }

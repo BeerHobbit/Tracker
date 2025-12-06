@@ -2,7 +2,7 @@ import UIKit
 import CoreData
 
 enum TrackerCategoryStoreError: Error {
-    case decodingErorInvalidId
+    case decodingErrorInvalidID
     case decodingErrorInvalidTitle
     case decodingErrorInvalidCreatedAt
 }
@@ -51,7 +51,7 @@ final class TrackerCategoryStore: NSObject {
         do {
             try controller.performFetch()
         } catch {
-            print("❌[fetchedResultsController.performFetch()] Failed to perform fetch: \(error)")
+            assertionFailure("❌[fetchedResultsController.performFetch()] Failed to perform fetch: \(error)")
         }
         return controller
     }()
@@ -74,21 +74,22 @@ final class TrackerCategoryStore: NSObject {
     
     func addNewTrackerCategory(_ category: TrackerCategory) throws {
         let categoryCoreData = TrackerCategoryCoreData(context: context)
-        categoryCoreData.id = category.id
+        categoryCoreData.categoryID = category.id
         categoryCoreData.title = category.title
         categoryCoreData.createdAt = category.createdAt
         try context.save()
     }
     
-    func trackerCategoryCoreData(by id: UUID) -> TrackerCategoryCoreData? {
+    func trackerCategoryCoreData(by id: UUID) throws -> TrackerCategoryCoreData? {
         let request = TrackerCategoryCoreData.fetchRequest()
-        request.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCategoryCoreData.id), id.uuidString)
+        request.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCategoryCoreData.categoryID), id as CVarArg)
+        return try context.fetch(request).first
     }
     
     // MARK: - Private Methods
     
     private func makeTrackerCategory(from categoryCoreData: TrackerCategoryCoreData) throws -> TrackerCategory {
-        guard let id = categoryCoreData.id else { throw TrackerCategoryStoreError.decodingErorInvalidId }
+        guard let id = categoryCoreData.categoryID else { throw TrackerCategoryStoreError.decodingErrorInvalidID }
         guard let title = categoryCoreData.title else { throw TrackerCategoryStoreError.decodingErrorInvalidTitle }
         guard let createdAt = categoryCoreData.createdAt else { throw TrackerCategoryStoreError.decodingErrorInvalidCreatedAt }
         return TrackerCategory(
@@ -137,6 +138,10 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
                 movedIndexes: movedIndexes
             )
         )
+        self.insertedIndexes = nil
+        self.deletedIndexes = nil
+        self.updatedIndexes = nil
+        self.movedIndexes = nil
     }
     
     func controller(
