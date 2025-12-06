@@ -2,7 +2,7 @@ import UIKit
 
 struct NewTrackerState {
     var title: String
-    var category: String
+    var category: TrackerCategory?
     var schedule: Set<Weekday>
     var emoji: String
     var color: UIColor?
@@ -10,7 +10,7 @@ struct NewTrackerState {
     var isReady: Bool {
         !title.isEmpty &&
         !schedule.isEmpty &&
-        !category.isEmpty &&
+        category != nil &&
         !emoji.isEmpty &&
         color != nil
     }

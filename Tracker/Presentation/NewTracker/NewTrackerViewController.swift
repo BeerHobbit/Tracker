@@ -78,7 +78,7 @@ final class NewTrackerViewController: UIViewController {
     
     private var state = NewTrackerState(
         title: "",
-        category: "",
+        category: nil,
         schedule: [],
         emoji: "",
         color: nil
@@ -247,7 +247,7 @@ final class NewTrackerViewController: UIViewController {
             cell.configure(
                 parameter: NewTrackerParameter(
                     title: param.title,
-                    subtitle: state.category,
+                    subtitle: state.category?.title ?? "",
                     isFirst: isFirst,
                     isLast: isLast
                 )
@@ -385,7 +385,7 @@ extension NewTrackerViewController: CustomizationCellDelegate {
 
 extension NewTrackerViewController: CategoryListViewControllerDelegate {
     
-    func categoryListVC(didSelectCategory category: String) {
+    func categoryListVC(didSelectCategory category: TrackerCategory) {
         state.category = category
         tableView.reloadData()
     }

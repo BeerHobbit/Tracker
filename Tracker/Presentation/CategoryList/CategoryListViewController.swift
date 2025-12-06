@@ -60,7 +60,9 @@ final class CategoryListViewController: UIViewController {
     
     // MARK: - Private Properties
     
-    private var categories:[String] = [] {
+    private let trackerCategoryStore = TrackerCategoryStore()
+    
+    private var categories: [TrackerCategory] = [] {
         didSet {
             updateEmptyState()
         }
@@ -74,6 +76,7 @@ final class CategoryListViewController: UIViewController {
         super.viewDidLoad()
         configDependencies()
         setupUI()
+        loadCategories()
         updateEmptyState()
     }
     
@@ -82,6 +85,8 @@ final class CategoryListViewController: UIViewController {
     private func configDependencies() {
         categoriesTableView.dataSource = self
         categoriesTableView.delegate = self
+        
+        trackerCategoryStore.delegate = self
     }
     
     // MARK: - Setup UI
@@ -161,6 +166,10 @@ final class CategoryListViewController: UIViewController {
     
     // MARK: - Private Methods
     
+    private func loadCategories() {
+        categories = trackerCategoryStore.trackerCategories
+    }
+    
     private func updateEmptyState() {
         emptyStateStackView.isHidden = !categories.isEmpty
     }
@@ -178,7 +187,7 @@ extension CategoryListViewController: UITableViewDataSource {
             assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(CategoryCell.reuseID) as \(String(describing: CategoryCell.self))")
             return UITableViewCell()
         }
-        let title = categories[indexPath.row]
+        let title = categories[indexPath.row].title
         let isSelected = indexPath == selectedIndexPath
         let isFirst = indexPath.row == 0
         let isLast = indexPath.row == categories.count - 1
@@ -233,6 +242,30 @@ extension CategoryListViewController: NewCategoryViewControllerDelegate {
             guard let self = self else { return }
             self.categoriesTableView.scrollToRow(at: newIndexPath, at: .bottom, animated: true)
         })
+    }
+    
+}
+
+extension CategoryListViewController: TrackerCategoryStoreDelegate {
+    
+    func store(_ store: TrackerCategoryStore, didUpdate update: TrackerCategoryStoreUpdate) {
+        categories = store.trackerCategories
+        
+        categoriesTableView.performBatchUpdates {
+            let deletedIndexPaths = update.deletedIndexes.map { IndexPath(row: $0, section: 0) }
+            let insertedIndexPaths = update.insertedIndexes.map { IndexPath(row: $0, section: 0) }
+            let updatedIndexPaths = update.updatedIndexes.map { IndexPath(row: $0, section: 0) }
+            
+            categoriesTableView.deleteRows(at: deletedIndexPaths, with: .automatic)
+            categoriesTableView.insertRows(at: insertedIndexPaths, with: .automatic)
+            categoriesTableView.reloadRows(at: updatedIndexPaths, with: .automatic)
+            for move in update.movedIndexes {
+                categoriesTableView.moveRow(
+                    at: IndexPath(row: move.oldIndex, section: 0),
+                    to: IndexPath(row: move.newIndex, section: 0)
+                )
+            }
+        }
     }
     
 }
