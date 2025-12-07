@@ -31,10 +31,10 @@ final class TrackerCategoryStore: NSObject {
     
     private let context: NSManagedObjectContext
     
-    private var insertedIndexes: IndexSet?
-    private var deletedIndexes: IndexSet?
-    private var updatedIndexes: IndexSet?
-    private var movedIndexes: Set<TrackerCategoryStoreUpdate.Move>?
+    private var inserted: Set<IndexPath>?
+    private var deleted: Set<IndexPath>?
+    private var updated: Set<IndexPath>?
+    private var moved: Set<StoreUpdate.Move>?
     
     private lazy var fetchedResultsController: NSFetchedResultsController<TrackerCategoryCoreData> = {
         let request = TrackerCategoryCoreData.fetchRequest()
@@ -80,12 +80,6 @@ final class TrackerCategoryStore: NSObject {
         try context.save()
     }
     
-    func trackerCategoryCoreData(by id: UUID) throws -> TrackerCategoryCoreData? {
-        let request = TrackerCategoryCoreData.fetchRequest()
-        request.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCategoryCoreData.categoryID), id as CVarArg)
-        return try context.fetch(request).first
-    }
-    
     // MARK: - Private Methods
     
     private func makeTrackerCategory(from categoryCoreData: TrackerCategoryCoreData) throws -> TrackerCategory {
@@ -106,24 +100,24 @@ final class TrackerCategoryStore: NSObject {
 extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
     
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<any NSFetchRequestResult>) {
-        insertedIndexes = IndexSet()
-        deletedIndexes = IndexSet()
-        updatedIndexes = IndexSet()
-        movedIndexes = Set<TrackerCategoryStoreUpdate.Move>()
+        inserted = []
+        deleted = []
+        updated = []
+        moved = Set<StoreUpdate.Move>()
     }
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<any NSFetchRequestResult>) {
         guard
-            let insertedIndexes = insertedIndexes,
-            let deletedIndexes = deletedIndexes,
-            let updatedIndexes = updatedIndexes,
-            let movedIndexes = movedIndexes
+            let insertedIndexPaths = inserted,
+            let deletedIndexPaths = deleted,
+            let updatedIndexPaths = updated,
+            let movedIndexPaths = moved
         else {
             print(
                   """
-                  ❌[controllerDidChangeContent]: some indexes are nil.
-                  Indexes: inserted \(String(describing: insertedIndexes)), deleted \(String(describing: deletedIndexes)),
-                  updated \(String(describing: updatedIndexes)), moved \(String(describing: movedIndexes))
+                  ❌[controllerDidChangeContent]: some indexPaths are nil.
+                  Indexes: inserted \(String(describing: inserted)), deleted \(String(describing: deleted)),
+                  updated \(String(describing: updated)), moved \(String(describing: moved))
                   """
             )
             return
@@ -131,17 +125,17 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
         
         delegate?.store(
             self,
-            didUpdate: TrackerCategoryStoreUpdate(
-                insertedIndexes: insertedIndexes,
-                deletedIndexes: deletedIndexes,
-                updatedIndexes: updatedIndexes,
-                movedIndexes: movedIndexes
+            didUpdate: StoreUpdate(
+                insertedIndexPaths: insertedIndexPaths,
+                deletedIndexPaths: deletedIndexPaths,
+                updatedIndexPaths: updatedIndexPaths,
+                movedIndexPaths: movedIndexPaths
             )
         )
-        self.insertedIndexes = nil
-        self.deletedIndexes = nil
-        self.updatedIndexes = nil
-        self.movedIndexes = nil
+        self.inserted = nil
+        self.deleted = nil
+        self.updated = nil
+        self.moved = nil
     }
     
     func controller(
@@ -153,17 +147,21 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
     ) {
         switch type {
         case .insert:
-            guard let indexPath = newIndexPath else { fatalError() }
-            insertedIndexes?.insert(indexPath.item)
+            if let newIndexPath {
+                inserted?.insert(newIndexPath)
+            }
         case .delete:
-            guard let indexPath = indexPath else { fatalError() }
-            deletedIndexes?.insert(indexPath.item)
+            if let indexPath {
+                deleted?.insert(indexPath)
+            }
         case .update:
-            guard let indexPath = indexPath else { fatalError() }
-            updatedIndexes?.insert(indexPath.item)
+            if let indexPath {
+                updated?.insert(indexPath)
+            }
         case .move:
-            guard let oldIndexPath = indexPath, let newIndexPath = newIndexPath else { fatalError() }
-            movedIndexes?.insert(.init(oldIndex: oldIndexPath.item, newIndex: newIndexPath.item))
+            if let oldIndexPath = indexPath, let newIndexPath = newIndexPath {
+                moved?.insert(.init(oldIndexPath: oldIndexPath, newIndexPath: newIndexPath))
+            }
         @unknown default:
             fatalError()
         }

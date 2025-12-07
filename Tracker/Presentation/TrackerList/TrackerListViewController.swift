@@ -93,6 +93,8 @@ final class TrackerListViewController: UIViewController {
     
     // MARK: - Private Properties
     
+    private let trackerStore = TrackerStore()
+    
     private lazy var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd.MM.yy"
@@ -131,6 +133,8 @@ final class TrackerListViewController: UIViewController {
     private func configDependencies() {
         trackersCollectionView.dataSource = self
         trackersCollectionView.delegate = self
+        
+        trackerStore.delegate = self
     }
     
     // MARK: - Setup UI
@@ -224,8 +228,8 @@ final class TrackerListViewController: UIViewController {
     }
     
     // MARK: - Private Methods
-    
-    private func configureCell(_ cell: TrackerCell, indexPath: IndexPath, updateDelegate: Bool) {
+    ////////////CHANGE///////
+    private func configureCell(_ cell: TrackerCell, at indexPath: IndexPath) {
         let category = visibleCategories[indexPath.section]
         let tracker = category.trackers[indexPath.item]
         let isCompleted = isCompleted(id: tracker.id, for: datePicker.date)
@@ -287,12 +291,11 @@ final class TrackerListViewController: UIViewController {
 extension TrackerListViewController: UICollectionViewDataSource {
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return visibleCategories.count
+        return trackerStore.numberOfSections()
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let category = visibleCategories[section]
-        return category.trackers.count
+        return trackerStore.numberOfItems(in: section)
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -406,6 +409,28 @@ extension TrackerListViewController: NewTrackerViewControllerDelegate {
         }
         
         filterTrackers(for: datePicker.date)
+    }
+    
+}
+
+extension TrackerListViewController: TrackerStoreDelegate {
+    
+    func store(_ store: TrackerStore, didUpdate update: StoreUpdate) {
+        trackersCollectionView.performBatchUpdates {
+            let deletedIndexPaths = Array(update.deletedIndexPaths)
+            let insertedIndexPaths = Array(update.insertedIndexPaths)
+            let updatedIndexPaths = Array(update.updatedIndexPaths)
+            
+            trackersCollectionView.deleteItems(at: deletedIndexPaths)
+            trackersCollectionView.insertItems(at: insertedIndexPaths)
+            trackersCollectionView.reloadItems(at: updatedIndexPaths)
+            for move in update.movedIndexPaths {
+                trackersCollectionView.moveItem(
+                    at: move.oldIndexPath,
+                    to: move.newIndexPath
+                )
+            }
+        }
     }
     
 }

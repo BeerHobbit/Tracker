@@ -48,8 +48,8 @@ final class TrackerCategoryHeader: UICollectionReusableView {
     
     // MARK: - Public Methods
     
-    func configure(category: TrackerCategory) {
-        titleLabel.text = category.title
+    func configure(title: String) {
+        titleLabel.text = title
     }
     
 }

@@ -240,21 +240,21 @@ extension CategoryListViewController: NewCategoryViewControllerDelegate {
 
 extension CategoryListViewController: TrackerCategoryStoreDelegate {
     
-    func store(_ store: TrackerCategoryStore, didUpdate update: TrackerCategoryStoreUpdate) {
+    func store(_ store: TrackerCategoryStore, didUpdate update: StoreUpdate) {
         categories = store.trackerCategories
         
         categoriesTableView.performBatchUpdates {
-            let deletedIndexPaths = update.deletedIndexes.map { IndexPath(row: $0, section: 0) }
-            let insertedIndexPaths = update.insertedIndexes.map { IndexPath(row: $0, section: 0) }
-            let updatedIndexPaths = update.updatedIndexes.map { IndexPath(row: $0, section: 0) }
+            let deletedIndexPaths = Array(update.deletedIndexPaths)
+            let insertedIndexPaths = Array(update.insertedIndexPaths)
+            let updatedIndexPaths = Array(update.updatedIndexPaths)
             
             categoriesTableView.deleteRows(at: deletedIndexPaths, with: .automatic)
             categoriesTableView.insertRows(at: insertedIndexPaths, with: .automatic)
             categoriesTableView.reloadRows(at: updatedIndexPaths, with: .automatic)
-            for move in update.movedIndexes {
+            for move in update.movedIndexPaths {
                 categoriesTableView.moveRow(
-                    at: IndexPath(row: move.oldIndex, section: 0),
-                    to: IndexPath(row: move.newIndex, section: 0)
+                    at: move.oldIndexPath,
+                    to: move.newIndexPath
                 )
             }
         }
