@@ -20,10 +20,17 @@ final class TrackerStore: NSObject {
     
     private let context: NSManagedObjectContext
     
+    private var currentWeekday: Weekday?
+    
+    private var insertedSections: IndexSet?
+    private var deletedSections: IndexSet?
+    
     private var inserted: Set<IndexPath>?
     private var deleted: Set<IndexPath>?
     private var updated: Set<IndexPath>?
     private var moved: Set<StoreUpdate.Move>?
+    
+    
     
     private lazy var fetchedResultsController: NSFetchedResultsController<TrackerCoreData> = {
         let request = TrackerCoreData.fetchRequest()
@@ -63,6 +70,10 @@ final class TrackerStore: NSObject {
     }
     
     // MARK: - Public Methods
+    
+    func setCurrentWeekday(_ weekday: Weekday?) {
+        currentWeekday = weekday
+    }
     
     func addNewTracker(_ tracker: Tracker, to category: TrackerCategory) throws {
         guard let categoryCoreData = findCategory(by: category.id) else { throw TrackerCategoryStoreError.decodingErrorInvalidID }
@@ -127,6 +138,15 @@ final class TrackerStore: NSObject {
         return try? context.fetch(request).first
     }
     
+    private func resetTracking() {
+        self.insertedSections = nil
+        self.deletedSections = nil
+        self.inserted = nil
+        self.deleted = nil
+        self.updated = nil
+        self.moved = nil
+    }
+    
 }
 
 // MARK: - NSFetchedResultsControllerDelegate
@@ -134,6 +154,8 @@ final class TrackerStore: NSObject {
 extension TrackerStore: NSFetchedResultsControllerDelegate {
     
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<any NSFetchRequestResult>) {
+        insertedSections = IndexSet()
+        deletedSections = IndexSet()
         inserted = []
         deleted = []
         updated = []
@@ -142,6 +164,8 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<any NSFetchRequestResult>) {
         guard
+            let insertedSections = insertedSections,
+            let deletedSections = deletedSections,
             let insertedIndexPaths = inserted,
             let deletedIndexPaths = deleted,
             let updatedIndexPaths = updated,
@@ -150,7 +174,8 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
             print(
                   """
                   ❌[controllerDidChangeContent]: some indexes are nil.
-                  Indexes: inserted \(String(describing: inserted)), deleted \(String(describing: deleted)),
+                  Indexes: insertedSections \(String(describing: insertedSections)), deletedSections \(String(describing: deletedSections)),
+                  inserted \(String(describing: inserted)), deleted \(String(describing: deleted)),
                   updated \(String(describing: updated)), moved \(String(describing: moved))
                   """
             )
@@ -160,16 +185,31 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
         delegate?.store(
             self,
             didUpdate: StoreUpdate(
+                insertedSections: insertedSections,
+                deletedSections: deletedSections,
                 insertedIndexPaths: insertedIndexPaths,
                 deletedIndexPaths: deletedIndexPaths,
                 updatedIndexPaths: updatedIndexPaths,
                 movedIndexPaths: movedIndexPaths
             )
         )
-        self.inserted = nil
-        self.deleted = nil
-        self.updated = nil
-        self.moved = nil
+        resetTracking()
+    }
+    
+    func controller(
+        _ controller: NSFetchedResultsController<any NSFetchRequestResult>,
+        didChange sectionInfo: any NSFetchedResultsSectionInfo,
+        atSectionIndex sectionIndex: Int,
+        for type: NSFetchedResultsChangeType
+    ) {
+        switch type {
+        case .insert:
+            insertedSections?.insert(sectionIndex)
+        case .delete:
+            deletedSections?.insert(sectionIndex)
+        default:
+            break
+        }
     }
     
     func controller(
@@ -197,7 +237,7 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
                 moved?.insert(.init(oldIndexPath: oldIndexPath, newIndexPath: newIndexPath))
             }
         @unknown default:
-            fatalError()
+            break
         }
     }
     

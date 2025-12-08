@@ -176,6 +176,8 @@ final class CategoryListViewController: UIViewController {
     
 }
 
+// MARK: - UITableViewDataSource
+
 extension CategoryListViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -197,6 +199,8 @@ extension CategoryListViewController: UITableViewDataSource {
     }
     
 }
+
+// MARK: - UITableViewDelegate
 
 extension CategoryListViewController: UITableViewDelegate {
     
@@ -225,6 +229,8 @@ extension CategoryListViewController: UITableViewDelegate {
     
 }
 
+// MARK: - NewCategoryViewControllerDelegate
+
 extension CategoryListViewController: NewCategoryViewControllerDelegate {
     
     func didCreateNewCategory(title: String) {
@@ -237,6 +243,8 @@ extension CategoryListViewController: NewCategoryViewControllerDelegate {
     }
     
 }
+
+// MARK: - TrackerCategoryStoreDelegate
 
 extension CategoryListViewController: TrackerCategoryStoreDelegate {
     
@@ -256,6 +264,13 @@ extension CategoryListViewController: TrackerCategoryStoreDelegate {
                     at: move.oldIndexPath,
                     to: move.newIndexPath
                 )
+            }
+        } completion: { [weak self] _ in
+            guard let self = self else { return }
+            let numberOfRows = self.categoriesTableView.numberOfRows(inSection: 0)
+            if numberOfRows >= 2 {
+                let indexPath = IndexPath(row: numberOfRows - 2, section: 0)
+                self.categoriesTableView.reloadRows(at: [indexPath], with: .none)
             }
         }
     }

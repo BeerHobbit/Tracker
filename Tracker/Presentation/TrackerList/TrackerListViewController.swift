@@ -108,14 +108,6 @@ final class TrackerListViewController: UIViewController {
         cellSpacing: 10
     )
     
-    private var categories: [TrackerCategory] = []
-    
-    private var visibleCategories: [TrackerCategory] = [] {
-        didSet {
-            updateEmptyState()
-        }
-    }
-    
     private var completedTrackers: Set<TrackerRecord> = []
     
     // MARK: - Life Cycle
@@ -124,7 +116,6 @@ final class TrackerListViewController: UIViewController {
         super.viewDidLoad()
         configDependencies()
         setupUI()
-        filterTrackers(for: datePicker.date)
         updateEmptyState()
     }
     
@@ -138,6 +129,7 @@ final class TrackerListViewController: UIViewController {
     }
     
     // MARK: - Setup UI
+    
     private func setupUI() {
         view.backgroundColor = .ypWhite
         view.addSubviews([
@@ -216,7 +208,6 @@ final class TrackerListViewController: UIViewController {
     @objc private func datePickerValueChanged(_ sender: UIDatePicker) {
         let selectedDate = sender.date.excludeTime()
         dateLabel.text = dateFormatter.string(from: selectedDate)
-        filterTrackers(for: selectedDate)
     }
     
     @objc private func addTrackerButtonDidTap() {
@@ -228,23 +219,17 @@ final class TrackerListViewController: UIViewController {
     }
     
     // MARK: - Private Methods
-    ////////////CHANGE///////
+    
     private func configureCell(_ cell: TrackerCell, at indexPath: IndexPath) {
-        let category = visibleCategories[indexPath.section]
-        let tracker = category.trackers[indexPath.item]
+        let tracker = trackerStore.tracker(at: indexPath)
         let isCompleted = isCompleted(id: tracker.id, for: datePicker.date)
         let quanity = getCurrentQuanity(id: tracker.id)
         cell.configure(from: tracker, isCompleted: isCompleted, quanity: quanity)
-        if updateDelegate { cell.delegate = self }
+        cell.delegate = self
     }
     
     private func updateEmptyState() {
-        emptyStateStackView.isHidden = !visibleCategories.isEmpty
-    }
-    
-    private func filterTrackers(for date: Date) {
-        let weekday = getWeekday(from: date)
-        filterTrackers(for: weekday)
+        emptyStateStackView.isHidden = !trackersCollectionView.isEmpty
     }
     
     private func getWeekday(from date: Date) -> Weekday {
@@ -254,16 +239,6 @@ final class TrackerListViewController: UIViewController {
             return Weekday.monday
         }
         return weekday
-    }
-    
-    private func filterTrackers(for weekday: Weekday) {
-        let filteredCategories: [TrackerCategory] = categories.compactMap { category in
-            let filteredTrackers = category.trackers.filter { $0.schedule.contains(weekday) }
-            guard !filteredTrackers.isEmpty else { return nil }
-            return TrackerCategory(title: category.title, trackers: filteredTrackers)
-        }
-        visibleCategories = filteredCategories
-        trackersCollectionView.reloadData()
     }
     
     private func isCompleted(id: UUID, for date: Date) -> Bool {
@@ -303,7 +278,7 @@ extension TrackerListViewController: UICollectionViewDataSource {
             assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(TrackerCell.reuseID) as \(String(describing: TrackerCell.self))")
             return UICollectionViewCell()
         }
-        configureCell(cell, indexPath: indexPath, updateDelegate: true)
+        configureCell(cell, at: indexPath)
         return cell
     }
     
@@ -314,8 +289,8 @@ extension TrackerListViewController: UICollectionViewDataSource {
             for: indexPath
         ) as? TrackerCategoryHeader else { return UICollectionReusableView() }
         
-        let category = visibleCategories[indexPath.section]
-        header.configure(category: category)
+        let title = trackerStore.titleForSection(indexPath.section)
+        header.configure(title: title)
         
         return header
     }
@@ -346,7 +321,8 @@ extension TrackerListViewController: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
         let headerView = TrackerCategoryHeader(frame: CGRect(x: 0, y: 0, width: collectionView.frame.width, height: 0))
-        headerView.configure(category: visibleCategories[section])
+        let title = trackerStore.titleForSection(section)
+        headerView.configure(title: title)
         
         let targetSize = headerView.systemLayoutSizeFitting(CGSize(width: collectionView.frame.width, height: UIView.layoutFittingExpandedSize.height))
         let size = CGSize(width: targetSize.width, height: targetSize.height)
@@ -370,12 +346,6 @@ extension TrackerListViewController: TrackerCellDelegate {
             )
             return
         }
-        
-        guard let indexPath = trackersCollectionView.indexPath(for: cell) else { return }
-        let category = visibleCategories[indexPath.section]
-        let tracker = category.trackers[indexPath.item]
-        toggleTracker(id: tracker.id, for: currentDate)
-        configureCell(cell, indexPath: indexPath, updateDelegate: false)
     }
     
 }
@@ -385,41 +355,45 @@ extension TrackerListViewController: TrackerCellDelegate {
 extension TrackerListViewController: NewTrackerViewControllerDelegate {
     
     func createTracker(from config: NewTrackerState) {
+        guard
+            let color = config.color,
+            let category = config.category
+        else {
+            print("❌[createTracker]: Color from config is nil")
+            return
+        }
+        
         let tracker = Tracker(
             id: UUID(),
             title: config.title,
-            color: config.color ?? .ypLightGray,
+            color: color,
             emoji: config.emoji,
-            schedule: config.schedule
+            schedule: config.schedule,
+            createdAt: Date()
         )
-        
-        if let oldCategoryIndex = categories.firstIndex(where: { $0.title == config.category }) {
-            let oldCategory = categories[oldCategoryIndex]
-            let updatedCategory = TrackerCategory(
-                title: oldCategory.title,
-                trackers: oldCategory.trackers + [tracker]
-            )
-            categories[oldCategoryIndex] = updatedCategory
-        } else {
-            let newCategory = TrackerCategory(
-                title: config.category,
-                trackers: [tracker]
-            )
-            categories.append(newCategory)
+        do {
+            try trackerStore.addNewTracker(tracker, to: category)
+        } catch {
+            assertionFailure("❌[addNewTracker]: New tracker was not saved: \(error)")
         }
-        
-        filterTrackers(for: datePicker.date)
     }
     
 }
+
+// MARK: - TrackerStoreDelegate
 
 extension TrackerListViewController: TrackerStoreDelegate {
     
     func store(_ store: TrackerStore, didUpdate update: StoreUpdate) {
         trackersCollectionView.performBatchUpdates {
+            let insertedSections = update.insertedSections
+            let deletedSections = update.deletedSections
             let deletedIndexPaths = Array(update.deletedIndexPaths)
             let insertedIndexPaths = Array(update.insertedIndexPaths)
             let updatedIndexPaths = Array(update.updatedIndexPaths)
+            
+            trackersCollectionView.deleteSections(deletedSections)
+            trackersCollectionView.insertSections(insertedSections)
             
             trackersCollectionView.deleteItems(at: deletedIndexPaths)
             trackersCollectionView.insertItems(at: insertedIndexPaths)
@@ -431,6 +405,7 @@ extension TrackerListViewController: TrackerStoreDelegate {
                 )
             }
         }
+        updateEmptyState()
     }
     
 }

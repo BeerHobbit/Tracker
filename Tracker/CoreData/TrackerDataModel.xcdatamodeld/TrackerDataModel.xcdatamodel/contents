@@ -7,7 +7,7 @@
         <relationship name="trackers" toMany="YES" deletionRule="Nullify" destinationEntity="TrackerCoreData" inverseName="category" inverseEntity="TrackerCoreData"/>
     </entity>
     <entity name="TrackerCoreData" representedClassName="TrackerCoreData" syncable="YES" codeGenerationType="class">
-        <attribute name="color" attributeType="Transformable"/>
+        <attribute name="color" attributeType="Transformable" valueTransformerName="ColorTransformer"/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="emoji" attributeType="String"/>
         <attribute name="schedule" attributeType="Transformable" valueTransformerName="ScheduleValueTransformer"/>

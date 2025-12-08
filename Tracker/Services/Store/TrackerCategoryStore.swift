@@ -126,6 +126,8 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
         delegate?.store(
             self,
             didUpdate: StoreUpdate(
+                insertedSections: [],
+                deletedSections: [],
                 insertedIndexPaths: insertedIndexPaths,
                 deletedIndexPaths: deletedIndexPaths,
                 updatedIndexPaths: updatedIndexPaths,
