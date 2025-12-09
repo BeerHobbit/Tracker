@@ -6,7 +6,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     let coreDataStack = CoreDataStack()
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        ScheduleValueTransformer.register()
         ColorTransformer.register()
         return true
     }

@@ -94,6 +94,7 @@ final class TrackerListViewController: UIViewController {
     // MARK: - Private Properties
     
     private let trackerStore = TrackerStore()
+    private let trackerRecordStore = TrackerRecordStore()
     
     private lazy var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -116,6 +117,8 @@ final class TrackerListViewController: UIViewController {
         super.viewDidLoad()
         configDependencies()
         setupUI()
+        loadTrackerRecords()
+        setWeekday()
         updateEmptyState()
     }
     
@@ -208,6 +211,8 @@ final class TrackerListViewController: UIViewController {
     @objc private func datePickerValueChanged(_ sender: UIDatePicker) {
         let selectedDate = sender.date.excludeTime()
         dateLabel.text = dateFormatter.string(from: selectedDate)
+        let weekday = getWeekday(from: selectedDate)
+        trackerStore.setCurrentWeekday(weekday)
     }
     
     @objc private func addTrackerButtonDidTap() {
@@ -228,6 +233,11 @@ final class TrackerListViewController: UIViewController {
         cell.delegate = self
     }
     
+    private func setWeekday() {
+        let weekday = getWeekday(from: datePicker.date.excludeTime())
+        trackerStore.setCurrentWeekday(weekday)
+    }
+    
     private func updateEmptyState() {
         emptyStateStackView.isHidden = !trackersCollectionView.isEmpty
     }
@@ -235,7 +245,7 @@ final class TrackerListViewController: UIViewController {
     private func getWeekday(from date: Date) -> Weekday {
         let value = Calendar.current.component(.weekday, from: date)
         guard let weekday = Weekday(rawValue: value) else {
-            assertionFailure("❌[getWeekday]: no such rawValue for Weekday")
+            assertionFailure("❌[getWeekday]: No such rawValue for Weekday")
             return Weekday.monday
         }
         return weekday
@@ -249,14 +259,29 @@ final class TrackerListViewController: UIViewController {
     private func toggleTracker(id: UUID, for date: Date) {
         let record = TrackerRecord(trackerID: id, completionDate: date.excludeTime())
         if completedTrackers.contains(record) {
-            completedTrackers.remove(record)
+            do {
+                try trackerRecordStore.deleteTrackerRecord(record)
+                loadTrackerRecords()
+            } catch {
+                print("❌[toggleTracker]: TrackerRecord was not removed")
+                return
+            }
         } else {
-            completedTrackers.insert(record)
+            do {
+                try trackerRecordStore.addNewTrackerRecord(record)
+                loadTrackerRecords()
+            } catch {
+                print("❌[toggleTracker]: New TrackerRecord was not added")
+            }
         }
     }
     
     private func getCurrentQuanity(id: UUID) -> Int {
         return completedTrackers.filter { $0.trackerID == id }.count
+    }
+    
+    private func loadTrackerRecords() {
+        completedTrackers = trackerRecordStore.trackerRecords
     }
     
 }
@@ -275,7 +300,7 @@ extension TrackerListViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = trackersCollectionView.dequeueReusableCell(withReuseIdentifier: TrackerCell.reuseID, for: indexPath) as? TrackerCell else {
-            assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(TrackerCell.reuseID) as \(String(describing: TrackerCell.self))")
+            assertionFailure("❌[dequeueReusableCell]: Can't dequeue reusable cell with id: \(TrackerCell.reuseID) as \(String(describing: TrackerCell.self))")
             return UICollectionViewCell()
         }
         configureCell(cell, at: indexPath)
@@ -346,6 +371,13 @@ extension TrackerListViewController: TrackerCellDelegate {
             )
             return
         }
+        
+        guard let indexPath = trackersCollectionView.indexPath(for: cell) else { return }
+        let tracker = trackerStore.tracker(at: indexPath)
+        toggleTracker(id: tracker.id, for: currentDate)
+        UIView.performWithoutAnimation {
+            trackersCollectionView.reloadItems(at: [indexPath])
+        }
     }
     
 }
@@ -406,6 +438,10 @@ extension TrackerListViewController: TrackerStoreDelegate {
             }
         }
         updateEmptyState()
+    }
+    
+    func storeDidReloadFRC(_ store: TrackerStore) {
+        trackersCollectionView.reloadData()
     }
     
 }

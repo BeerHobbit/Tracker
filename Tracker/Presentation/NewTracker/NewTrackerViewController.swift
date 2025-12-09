@@ -371,6 +371,8 @@ extension NewTrackerViewController: ScheduleViewControllerDelegate {
     
 }
 
+// MARK: - CustomizationCellDelegate
+
 extension NewTrackerViewController: CustomizationCellDelegate {
     
     func customizationCell(didChangeEmoji emoji: String) {
@@ -383,6 +385,8 @@ extension NewTrackerViewController: CustomizationCellDelegate {
     
 }
 
+// MARK: - CategoryListViewControllerDelegate
+
 extension NewTrackerViewController: CategoryListViewControllerDelegate {
     
     func categoryListVC(didSelectCategory category: TrackerCategory) {
@@ -391,8 +395,3 @@ extension NewTrackerViewController: CategoryListViewControllerDelegate {
     }
     
 }
-
-#Preview {
-    UINavigationController(rootViewController: NewTrackerViewController())
-}
-

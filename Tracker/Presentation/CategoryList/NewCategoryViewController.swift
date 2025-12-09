@@ -185,7 +185,3 @@ extension NewCategoryViewController: EnterNewCategoryCellDelegate {
     }
     
 }
-
-#Preview {
-    UINavigationController(rootViewController: NewCategoryViewController())
-}

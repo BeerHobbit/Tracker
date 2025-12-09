@@ -4,7 +4,6 @@ import CoreData
 enum TrackerStoreError: Error {
     case decodingErrorInvalidID
     case decodingErrorInvalidTitle
-    case decodingErrorInvalidSchedule
     case decodingErrorInvalidEmoji
     case decodingErrorInvalidCreatedAt
     case decodingErrorInvalidColor
@@ -20,39 +19,17 @@ final class TrackerStore: NSObject {
     
     private let context: NSManagedObjectContext
     
-    private var currentWeekday: Weekday?
+    private var currentWeekday: Weekday? = .monday
     
     private var insertedSections: IndexSet?
     private var deletedSections: IndexSet?
-    
     private var inserted: Set<IndexPath>?
     private var deleted: Set<IndexPath>?
     private var updated: Set<IndexPath>?
     private var moved: Set<StoreUpdate.Move>?
     
-    
-    
     private lazy var fetchedResultsController: NSFetchedResultsController<TrackerCoreData> = {
-        let request = TrackerCoreData.fetchRequest()
-        request.sortDescriptors = [
-            NSSortDescriptor(keyPath: \TrackerCoreData.category?.title, ascending: true),
-            NSSortDescriptor(keyPath: \TrackerCoreData.createdAt, ascending: true)
-        ]
-        
-        let controller = NSFetchedResultsController(
-            fetchRequest: request,
-            managedObjectContext: context,
-            sectionNameKeyPath: #keyPath(TrackerCoreData.category.title),
-            cacheName: nil
-        )
-        
-        controller.delegate = self
-        do {
-            try controller.performFetch()
-        } catch {
-            assertionFailure("❌[fetchedResultsController.performFetch()] Failed to perform fetch: \(error)")
-        }
-        return controller
+        updateFetchResultsController()
     }()
     
     // MARK: - Initializer
@@ -73,6 +50,8 @@ final class TrackerStore: NSObject {
     
     func setCurrentWeekday(_ weekday: Weekday?) {
         currentWeekday = weekday
+        fetchedResultsController = updateFetchResultsController()
+        delegate?.storeDidReloadFRC(self)
     }
     
     func addNewTracker(_ tracker: Tracker, to category: TrackerCategory) throws {
@@ -83,11 +62,12 @@ final class TrackerStore: NSObject {
         trackerCoreData.title = tracker.title
         trackerCoreData.color = tracker.color
         trackerCoreData.emoji = tracker.emoji
-        trackerCoreData.schedule = tracker.schedule as NSObject
         trackerCoreData.createdAt = tracker.createdAt
-        
+
         trackerCoreData.category = categoryCoreData
         categoryCoreData.addToTrackers(trackerCoreData)
+        
+        addSchedule(tracker.schedule, to: trackerCoreData)
         
         try context.save()
     }
@@ -120,8 +100,8 @@ final class TrackerStore: NSObject {
         guard let title = trackerCoreData.title else { throw TrackerStoreError.decodingErrorInvalidTitle }
         guard let color = trackerCoreData.color as? UIColor else { throw TrackerStoreError.decodingErrorInvalidColor }
         guard let emoji = trackerCoreData.emoji else { throw TrackerStoreError.decodingErrorInvalidEmoji }
-        guard let schedule = trackerCoreData.schedule as? Set<Weekday> else { throw TrackerStoreError.decodingErrorInvalidSchedule }
         guard let createdAt = trackerCoreData.createdAt else { throw TrackerStoreError.decodingErrorInvalidCreatedAt }
+        let schedule = getSchedule(from: trackerCoreData)
         return Tracker(
             id: id,
             title: title,
@@ -135,7 +115,26 @@ final class TrackerStore: NSObject {
     private func findCategory(by id: UUID) -> TrackerCategoryCoreData? {
         let request = TrackerCategoryCoreData.fetchRequest()
         request.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCategoryCoreData.categoryID), id as CVarArg)
+        request.fetchLimit = 1
         return try? context.fetch(request).first
+    }
+    
+    private func addSchedule(_ schedule: Set<Weekday>, to tracker: TrackerCoreData) {
+        for weekday in schedule {
+            let request = WeekdayCoreData.fetchRequest()
+            request.predicate = NSPredicate(format: "%K == %d", #keyPath(WeekdayCoreData.rawValue), weekday.rawValue)
+            request.fetchLimit = 1
+            let weekdayCoreData = (try? context.fetch(request).first) ?? WeekdayCoreData(context: context)
+            weekdayCoreData.rawValue = Int16(weekday.rawValue)
+            
+            weekdayCoreData.addToTrackers(tracker)
+            tracker.addToSchedule(weekdayCoreData)
+        }
+    }
+    
+    private func getSchedule(from tracker: TrackerCoreData) -> Set<Weekday> {
+        guard let schedule = tracker.schedule as? Set<WeekdayCoreData> else { return [] }
+        return Set(schedule.compactMap { Weekday(rawValue: Int($0.rawValue)) })
     }
     
     private func resetTracking() {
@@ -145,6 +144,35 @@ final class TrackerStore: NSObject {
         self.deleted = nil
         self.updated = nil
         self.moved = nil
+    }
+    
+    private func makeFetchRequest() -> NSFetchRequest<TrackerCoreData> {
+        let request = TrackerCoreData.fetchRequest()
+        request.sortDescriptors = [
+            NSSortDescriptor(keyPath: \TrackerCoreData.category?.title, ascending: true),
+            NSSortDescriptor(keyPath: \TrackerCoreData.createdAt, ascending: true)
+        ]
+        if let currentWeekday = currentWeekday {
+            request.predicate = NSPredicate(format: "ANY %K == %d", #keyPath(TrackerCoreData.schedule.rawValue), currentWeekday.rawValue)
+        }
+        return request
+    }
+    
+    private func updateFetchResultsController() -> NSFetchedResultsController<TrackerCoreData> {
+        let request = makeFetchRequest()
+        let newController = NSFetchedResultsController(
+            fetchRequest: request,
+            managedObjectContext: context,
+            sectionNameKeyPath: #keyPath(TrackerCoreData.category.title),
+            cacheName: nil
+        )
+        newController.delegate = self
+        do {
+            try newController.performFetch()
+        } catch {
+            assertionFailure("❌[fetchedResultsController.performFetch()] Failed to perform fetch: \(error)")
+        }
+        return newController
     }
     
 }

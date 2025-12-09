@@ -276,7 +276,3 @@ extension CategoryListViewController: TrackerCategoryStoreDelegate {
     }
     
 }
-
-#Preview {
-    UINavigationController(rootViewController: CategoryListViewController())
-}

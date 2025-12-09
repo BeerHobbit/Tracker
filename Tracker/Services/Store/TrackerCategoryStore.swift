@@ -60,7 +60,7 @@ final class TrackerCategoryStore: NSObject {
     
     convenience override init() {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-            fatalError("AppDelegate is unavailable")
+            fatalError("❌AppDelegate is unavailable")
         }
         let context = appDelegate.coreDataStack.viewContext
         self.init(context: context)

@@ -130,6 +130,8 @@ final class CustomizationCell: UITableViewCell {
     
 }
 
+// MARK: - UICollectionViewDataSource
+
 extension CustomizationCell: UICollectionViewDataSource {
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -181,6 +183,8 @@ extension CustomizationCell: UICollectionViewDataSource {
     
 }
 
+// MARK: - UICollectionViewDelegateFlowLayout
+
 extension CustomizationCell: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -222,6 +226,8 @@ extension CustomizationCell: UICollectionViewDelegateFlowLayout {
     
 }
 
+// MARK: - UICollectionViewDelegate
+
 extension CustomizationCell: UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -252,8 +258,4 @@ extension CustomizationCell: UICollectionViewDelegate {
         }
     }
     
-}
-
-#Preview {
-    CustomizationCell(style: .default, reuseIdentifier: CustomizationCell.reuseID)
 }

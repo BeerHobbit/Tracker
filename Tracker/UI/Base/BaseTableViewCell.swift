@@ -89,6 +89,8 @@ class BaseTableViewCell: UITableViewCell {
         ])
     }
     
+    // MARK: - Public Methods
+    
     func configAppearance(isFirst: Bool, isLast: Bool) {
         if isFirst && isLast {
             containerView.layer.cornerRadius = 16
