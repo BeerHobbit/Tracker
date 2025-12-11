@@ -6,14 +6,14 @@ final class CoreDataStack {
         let container = NSPersistentContainer(name: "TrackerDataModel")
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
-                fatalError("❌[loadPersistentStores]: can't load store, error: \(error)")
+                assertionFailure("❌[loadPersistentStores]: can't load store, error: \(error)")
             }
         })
         return container
     }()
     
     var viewContext: NSManagedObjectContext {
-        return persistentContainer.viewContext
+        persistentContainer.viewContext
     }
     
     func saveContext() {

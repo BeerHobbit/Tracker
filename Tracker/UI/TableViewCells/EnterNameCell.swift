@@ -63,7 +63,8 @@ final class EnterNameCell: UITableViewCell {
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        assertionFailure("❌init(coder:) has not been implemented")
+        return nil
     }
     
     // MARK: - Configure Dependencies
@@ -139,7 +140,7 @@ final class EnterNameCell: UITableViewCell {
     }
     
     private func isTooLong(string: String) -> Bool {
-        return string.count > maxCharacters
+        string.count > maxCharacters
     }
 }
 

@@ -181,7 +181,7 @@ final class CategoryListViewController: UIViewController {
 extension CategoryListViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories.count
+        categories.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -220,11 +220,11 @@ extension CategoryListViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        return UIView()
+        UIView()
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return 24
+        24
     }
     
 }
@@ -266,7 +266,7 @@ extension CategoryListViewController: TrackerCategoryStoreDelegate {
                 )
             }
         } completion: { [weak self] _ in
-            guard let self = self else { return }
+            guard let self else { return }
             let numberOfRows = self.categoriesTableView.numberOfRows(inSection: 0)
             if numberOfRows >= 2 {
                 let indexPath = IndexPath(row: numberOfRows - 2, section: 0)

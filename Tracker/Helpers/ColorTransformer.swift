@@ -4,7 +4,7 @@ import UIKit
 final class ColorTransformer: NSSecureUnarchiveFromDataTransformer {
     
     override class var allowedTopLevelClasses: [AnyClass] {
-        return [UIColor.self]
+        [UIColor.self]
     }
     
     static func register() {

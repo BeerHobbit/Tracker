@@ -266,6 +266,56 @@ final class NewTrackerViewController: UIViewController {
         }
     }
     
+    private func updateStateTitle(_ title: String) {
+        state = NewTrackerState(
+            title: title,
+            category: state.category,
+            schedule: state.schedule,
+            emoji: state.emoji,
+            color: state.color
+        )
+    }
+    
+    private func updateStateSchedule(_ schedule: Set<Weekday>) {
+        state = NewTrackerState(
+            title: state.title,
+            category: state.category,
+            schedule: schedule,
+            emoji: state.emoji,
+            color: state.color
+        )
+    }
+    
+    private func updateStateEmoji(_ emoji: String) {
+        state = NewTrackerState(
+            title: state.title,
+            category: state.category,
+            schedule: state.schedule,
+            emoji: emoji,
+            color: state.color
+        )
+    }
+    
+    private func updateStateColor(_ color: UIColor?) {
+        state = NewTrackerState(
+            title: state.title,
+            category: state.category,
+            schedule: state.schedule,
+            emoji: state.emoji,
+            color: color
+        )
+    }
+    
+    private func updateStateCategory(_ category: TrackerCategory?) {
+        state = NewTrackerState(
+            title: state.title,
+            category: category,
+            schedule: state.schedule,
+            emoji: state.emoji,
+            color: state.color
+        )
+    }
+    
 }
 
 // MARK: - UITableViewDataSource
@@ -273,7 +323,7 @@ final class NewTrackerViewController: UIViewController {
 extension NewTrackerViewController: UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        return sections.count
+        sections.count
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -305,15 +355,15 @@ extension NewTrackerViewController: UITableViewDelegate {
         switch sections[indexPath.section] {
         case .parameters(let items):
             switch items[indexPath.row] {
-            case .category(_): pushToCategoryListVC()
-            case .schedule(_): pushToScheduleVC()
+            case .category: pushToCategoryListVC()
+            case .schedule: pushToScheduleVC()
             }
         default: return
         }
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        return UIView()
+        UIView()
     }
   
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
@@ -324,15 +374,15 @@ extension NewTrackerViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        return UIView()
+        UIView()
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return 0
+        0
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return UITableView.automaticDimension
+        UITableView.automaticDimension
     }
     
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -350,7 +400,7 @@ extension NewTrackerViewController: UITableViewDelegate {
 extension NewTrackerViewController: EnterNameCellDelegate {
     
     func enterNameCell(didChangeText text: String) {
-        state.title = text
+        updateStateTitle(text)
     }
     
     func updateCellLayout() {
@@ -365,7 +415,7 @@ extension NewTrackerViewController: EnterNameCellDelegate {
 extension NewTrackerViewController: ScheduleViewControllerDelegate {
     
     func getConfiguredSchedule(_ schedule: Set<Weekday>) {
-        state.schedule = schedule
+        updateStateSchedule(schedule)
         tableView.reloadData()
     }
     
@@ -376,11 +426,11 @@ extension NewTrackerViewController: ScheduleViewControllerDelegate {
 extension NewTrackerViewController: CustomizationCellDelegate {
     
     func customizationCell(didChangeEmoji emoji: String) {
-        state.emoji = emoji
+        updateStateEmoji(emoji)
     }
     
     func customizationCell(didChangeColor color: UIColor?) {
-        state.color = color
+        updateStateColor(color)
     }
     
 }
@@ -390,7 +440,7 @@ extension NewTrackerViewController: CustomizationCellDelegate {
 extension NewTrackerViewController: CategoryListViewControllerDelegate {
     
     func categoryListVC(didSelectCategory category: TrackerCategory) {
-        state.category = category
+        updateStateCategory(category)
         tableView.reloadData()
     }
     

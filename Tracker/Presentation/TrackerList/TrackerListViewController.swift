@@ -277,7 +277,7 @@ final class TrackerListViewController: UIViewController {
     }
     
     private func getCurrentQuanity(id: UUID) -> Int {
-        return completedTrackers.filter { $0.trackerID == id }.count
+        completedTrackers.filter { $0.trackerID == id }.count
     }
     
     private func loadTrackerRecords() {
@@ -291,11 +291,11 @@ final class TrackerListViewController: UIViewController {
 extension TrackerListViewController: UICollectionViewDataSource {
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return trackerStore.numberOfSections()
+        trackerStore.numberOfSections()
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return trackerStore.numberOfItems(in: section)
+        trackerStore.numberOfItems(in: section)
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -333,15 +333,15 @@ extension TrackerListViewController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsets(top: 12, left: layoutParams.leftInset, bottom: 16, right: layoutParams.rightInset)
+        UIEdgeInsets(top: 12, left: layoutParams.leftInset, bottom: 16, right: layoutParams.rightInset)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return .zero
+        .zero
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        return layoutParams.cellSpacing
+        layoutParams.cellSpacing
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
@@ -442,6 +442,7 @@ extension TrackerListViewController: TrackerStoreDelegate {
     
     func storeDidReloadFRC(_ store: TrackerStore) {
         trackersCollectionView.reloadData()
+        updateEmptyState()
     }
     
 }

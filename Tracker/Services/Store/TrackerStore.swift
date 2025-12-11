@@ -89,7 +89,8 @@ final class TrackerStore: NSObject {
         do {
             return try makeTracker(from: object)
         } catch {
-            fatalError("❌[makeTracker]: Failed to decode Tracker: \(error)")
+            assertionFailure("❌[makeTracker]: Failed to decode Tracker: \(error)")
+            return Tracker(id: UUID(), title: "", color: .colorSelection1, emoji: "", schedule: [], createdAt: Date())
         }
     }
     

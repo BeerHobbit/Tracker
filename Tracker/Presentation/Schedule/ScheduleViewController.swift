@@ -133,6 +133,7 @@ extension ScheduleViewController: UITableViewDataSource {
         let isLast = indexPath.row == weekdays.count - 1
         cell.configure(weekday: weekday, isIncluded: isIncluded, isFirst: isFirst, isLast: isLast)
         cell.delegate = self
+        
         return cell
     }
     
@@ -143,19 +144,19 @@ extension ScheduleViewController: UITableViewDataSource {
 extension ScheduleViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        return UIView()
+        UIView()
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return 24
+        24
     }
     
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        return UIView()
+        UIView()
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return 0
+        0
     }
     
 }

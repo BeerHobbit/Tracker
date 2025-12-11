@@ -165,7 +165,7 @@ extension TrackerCategoryStore: NSFetchedResultsControllerDelegate {
                 moved?.insert(.init(oldIndexPath: oldIndexPath, newIndexPath: newIndexPath))
             }
         @unknown default:
-            fatalError()
+            assertionFailure()
         }
     }
     

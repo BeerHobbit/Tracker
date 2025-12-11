@@ -1,11 +1,11 @@
 import UIKit
 
 struct NewTrackerState {
-    var title: String
-    var category: TrackerCategory?
-    var schedule: Set<Weekday>
-    var emoji: String
-    var color: UIColor?
+    let title: String
+    let category: TrackerCategory?
+    let schedule: Set<Weekday>
+    let emoji: String
+    let color: UIColor?
     
     var isReady: Bool {
         !title.isEmpty &&

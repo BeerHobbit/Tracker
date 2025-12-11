@@ -41,7 +41,7 @@ final class CustomizationCell: UITableViewCell {
         }
     }
     
-    private var color: UIColor? = nil {
+    private var color: UIColor? {
         didSet {
             delegate?.customizationCell(didChangeColor: color)
         }
@@ -93,7 +93,8 @@ final class CustomizationCell: UITableViewCell {
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        assertionFailure("❌init(coder:) has not been implemented")
+        return nil
     }
     
     // MARK: - Overrides
@@ -135,7 +136,7 @@ final class CustomizationCell: UITableViewCell {
 extension CustomizationCell: UICollectionViewDataSource {
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return sections.count
+        sections.count
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -195,15 +196,15 @@ extension CustomizationCell: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsets(top: 24, left: layoutParams.leftInset, bottom: 40, right: layoutParams.rightInset)
+        UIEdgeInsets(top: 24, left: layoutParams.leftInset, bottom: 40, right: layoutParams.rightInset)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return .zero
+        .zero
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        return layoutParams.cellSpacing
+        layoutParams.cellSpacing
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
