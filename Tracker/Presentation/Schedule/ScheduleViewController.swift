@@ -123,15 +123,17 @@ extension ScheduleViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = scheduleTableView.dequeueReusableCell(withIdentifier: ScheduleCell.reuseID, for: indexPath) as? ScheduleCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ScheduleCell.reuseID, for: indexPath) as? ScheduleCell else {
             assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(ScheduleCell.reuseID) as \(String(describing: ScheduleCell.self))")
             return UITableViewCell()
         }
         let weekday = weekdays[indexPath.row]
+        let isIncluded = chosenWeekdays.contains(weekday)
         let isFirst = indexPath.row == 0
         let isLast = indexPath.row == weekdays.count - 1
-        cell.configure(weekday: weekday, isFirst: isFirst, isLast: isLast)
+        cell.configure(weekday: weekday, isIncluded: isIncluded, isFirst: isFirst, isLast: isLast)
         cell.delegate = self
+        
         return cell
     }
     
@@ -142,19 +144,19 @@ extension ScheduleViewController: UITableViewDataSource {
 extension ScheduleViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        return UIView()
+        UIView()
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return 24
+        24
     }
     
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        return UIView()
+        UIView()
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return 0
+        0
     }
     
 }

@@ -7,7 +7,8 @@ extension UIView {
     
     @discardableResult func edgesToSuperview() -> Self {
         guard let superview = superview else {
-            fatalError("❌[edgesToSuperview()] View is not in the hierarchy, view: \(self)")
+            assertionFailure("❌[edgesToSuperview()] View is not in the hierarchy, view: \(self)")
+            return self
         }
         translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([

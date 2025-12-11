@@ -8,12 +8,15 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - Types
     
-    private enum SectionType: Int, CaseIterable {
-        case enterName, parameters
+    private enum Section {
+        case enterName
+        case parameters([Parameter])
+        case customization
     }
     
-    private enum ParameterType: Int, CaseIterable {
-        case category, schedule
+    private enum Parameter {
+        case category(ParameterItem)
+        case schedule(ParameterItem)
     }
     
     // MARK: - Views
@@ -23,11 +26,10 @@ final class NewTrackerViewController: UIViewController {
         
         tableView.register(EnterNameCell.self, forCellReuseIdentifier: EnterNameCell.reuseID)
         tableView.register(ParameterCell.self, forCellReuseIdentifier: ParameterCell.reuseID)
+        tableView.register(CustomizationCell.self, forCellReuseIdentifier: CustomizationCell.reuseID)
         
         tableView.backgroundColor = .ypWhite
         tableView.separatorStyle = .none
-        tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 113
         tableView.keyboardDismissMode = .onDrag
         
         return tableView
@@ -60,7 +62,6 @@ final class NewTrackerViewController: UIViewController {
         button.layer.cornerRadius = 16
         
         button.isEnabled = false
-        
         return button
     }()
     
@@ -77,10 +78,10 @@ final class NewTrackerViewController: UIViewController {
     
     private var state = NewTrackerState(
         title: "",
-        category: "Важное",
+        category: nil,
         schedule: [],
-        emoji: "🤯",
-        color: .colorSelection1
+        emoji: "",
+        color: nil
     ) {
         didSet {
             createButton.isEnabled = state.isReady
@@ -90,7 +91,17 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - Private Properties
     
-    private var scheduleVC: ScheduleViewController? = ScheduleViewController()
+    private lazy var scheduleVC: ScheduleViewController? = ScheduleViewController()
+    private lazy var categoryListVC: CategoryListViewController? = CategoryListViewController()
+    
+    private let sections: [Section] = [
+        .enterName,
+        .parameters([
+            .category(ParameterItem(title: "Категория")),
+            .schedule(ParameterItem(title: "Расписание"))
+        ]),
+        .customization
+    ]
     
     // MARK: - Life Cycle
     
@@ -107,6 +118,7 @@ final class NewTrackerViewController: UIViewController {
         tableView.delegate = self
         
         scheduleVC?.delegate = self
+        categoryListVC?.delegate = self
     }
     
     // MARK: - Setup UI
@@ -177,41 +189,6 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - Private Methods
     
-    private func makeEnterNameCell(_ tableView: UITableView, for indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: EnterNameCell.reuseID, for: indexPath) as? EnterNameCell else {
-            assertionFailure("❌[makeEnterNameCell]: can't dequeue reusable cell with id: \(EnterNameCell.reuseID) as \(String(describing: EnterNameCell.self))")
-            return UITableViewCell()
-        }
-        cell.delegate = self
-        return cell
-    }
-    
-    private func makeParameterCell(_ tableView: UITableView, for indexPath: IndexPath) -> UITableViewCell {
-        guard let parameterType = ParameterType(rawValue: indexPath.row) else {
-            assertionFailure("❌[makeParameterCell] no such rawValue for \(String(describing: ParameterType.self))")
-            return UITableViewCell()
-        }
-        
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: ParameterCell.reuseID, for: indexPath) as? ParameterCell else {
-            assertionFailure("❌[makeParameterCell]: can't dequeue reusable cell with id: \(ParameterCell.reuseID) as \(String(describing: ParameterCell.self))")
-            return UITableViewCell()
-        }
-        
-        let configuration = parameterConfig(type: parameterType)
-        cell.configure(parameter: configuration)
-        return cell
-    }
-    
-    private func parameterConfig(type: ParameterType) -> NewTrackerParameter {
-        switch type {
-        case .category:
-            return NewTrackerParameter(title: "Категория", subtitle: state.category, isFirst: true, isLast: false)
-        case .schedule:
-            let scheduleString = Weekday.formattedWeekdays(Array(state.schedule))
-            return NewTrackerParameter(title: "Расписание", subtitle: scheduleString, isFirst: false, isLast: true)
-        }
-    }
-    
     private func singleTapRecognizer() -> UITapGestureRecognizer {
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(didSingleTap))
         singleTap.numberOfTapsRequired = 1
@@ -224,6 +201,121 @@ final class NewTrackerViewController: UIViewController {
         navigationController?.pushViewController(scheduleVC, animated: true)
     }
     
+    private func pushToCategoryListVC() {
+        guard let categoryListVC = categoryListVC else { return }
+        navigationController?.pushViewController(categoryListVC, animated: true)
+    }
+    
+    private func makeEnterNameCell(_ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: EnterNameCell.reuseID, for: indexPath) as? EnterNameCell else {
+            assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(EnterNameCell.reuseID) as \(String(describing: EnterNameCell.self))")
+            return UITableViewCell()
+        }
+        cell.delegate = self
+        
+        return cell
+    }
+    
+    private func makeParameterCell(_ tableView: UITableView, _ indexPath: IndexPath, _ items: [Parameter]) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ParameterCell.reuseID, for: indexPath) as? ParameterCell else {
+            assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(ParameterCell.reuseID) as \(String(describing: ParameterCell.self))")
+            return UITableViewCell()
+        }
+        configureParameterCell(cell, indexPath, items)
+        
+        return cell
+    }
+    
+    private func makeCustomizationCell(_ tableView: UITableView, _ indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: CustomizationCell.reuseID, for: indexPath) as? CustomizationCell else {
+            assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(CustomizationCell.reuseID) as \(String(describing: CustomizationCell.self))")
+            return UITableViewCell()
+        }
+        cell.delegate = self
+        
+        return cell
+    }
+    
+    private func configureParameterCell(_ cell: ParameterCell, _ indexPath: IndexPath, _ items: [Parameter]) {
+        let item = items[indexPath.row]
+        
+        let isFirst = indexPath.row == 0
+        let isLast = indexPath.row == items.count - 1
+        
+        switch item {
+        case .category(let param):
+            cell.configure(
+                parameter: NewTrackerParameter(
+                    title: param.title,
+                    subtitle: state.category?.title ?? "",
+                    isFirst: isFirst,
+                    isLast: isLast
+                )
+            )
+            
+        case .schedule(let param):
+            let scheduleString = Weekday.formattedWeekdays(Array(state.schedule))
+            cell.configure(
+                parameter: NewTrackerParameter(
+                    title: param.title,
+                    subtitle: scheduleString,
+                    isFirst: isFirst,
+                    isLast: isLast
+                )
+            )
+        }
+    }
+    
+    private func updateStateTitle(_ title: String) {
+        state = NewTrackerState(
+            title: title,
+            category: state.category,
+            schedule: state.schedule,
+            emoji: state.emoji,
+            color: state.color
+        )
+    }
+    
+    private func updateStateSchedule(_ schedule: Set<Weekday>) {
+        state = NewTrackerState(
+            title: state.title,
+            category: state.category,
+            schedule: schedule,
+            emoji: state.emoji,
+            color: state.color
+        )
+    }
+    
+    private func updateStateEmoji(_ emoji: String) {
+        state = NewTrackerState(
+            title: state.title,
+            category: state.category,
+            schedule: state.schedule,
+            emoji: emoji,
+            color: state.color
+        )
+    }
+    
+    private func updateStateColor(_ color: UIColor?) {
+        state = NewTrackerState(
+            title: state.title,
+            category: state.category,
+            schedule: state.schedule,
+            emoji: state.emoji,
+            color: color
+        )
+    }
+    
+    private func updateStateCategory(_ category: TrackerCategory?) {
+        state = NewTrackerState(
+            title: state.title,
+            category: category,
+            schedule: state.schedule,
+            emoji: state.emoji,
+            color: state.color
+        )
+    }
+    
 }
 
 // MARK: - UITableViewDataSource
@@ -231,31 +323,25 @@ final class NewTrackerViewController: UIViewController {
 extension NewTrackerViewController: UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        return SectionType.allCases.count
+        sections.count
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        guard let sectionType = SectionType(rawValue: section) else {
-            assertionFailure("❌[numberOfRowsInSection] no such rawValue for \(String(describing: SectionType.self))")
-            return 0
-        }
-        switch sectionType {
+        switch sections[section] {
         case .enterName: return 1
-        case .parameters: return ParameterType.allCases.count
+        case .parameters(let items): return items.count
+        case .customization: return 1
         }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let sectionType = SectionType(rawValue: indexPath.section) else {
-            assertionFailure("❌[cellForRowAt] no such rawValue for \(String(describing: SectionType.self))")
-            return UITableViewCell()
-        }
-        
-        switch sectionType {
+        switch sections[indexPath.section] {
         case .enterName:
-            return makeEnterNameCell(tableView, for: indexPath)
-        case .parameters:
-            return makeParameterCell(tableView, for: indexPath)
+            return makeEnterNameCell(tableView, indexPath)
+        case .parameters(let items):
+            return makeParameterCell(tableView, indexPath, items)
+        case .customization:
+            return makeCustomizationCell(tableView, indexPath)
         }
     }
     
@@ -266,19 +352,10 @@ extension NewTrackerViewController: UITableViewDataSource {
 extension NewTrackerViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard let sectionType = SectionType(rawValue: indexPath.section) else {
-            assertionFailure("❌[didSelectRowAt] no such rawValue for \(String(describing: SectionType.self))")
-            return
-        }
-        guard let parameterType = ParameterType(rawValue: indexPath.row) else {
-            assertionFailure("❌[didSelectRowAt] no such rawValue for \(String(describing: ParameterType.self))")
-            return
-        }
-        
-        switch sectionType {
-        case .parameters:
-            switch parameterType {
-            case .category: return
+        switch sections[indexPath.section] {
+        case .parameters(let items):
+            switch items[indexPath.row] {
+            case .category: pushToCategoryListVC()
             case .schedule: pushToScheduleVC()
             }
         default: return
@@ -286,19 +363,34 @@ extension NewTrackerViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        return UIView()
+        UIView()
     }
   
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return 24
+        switch sections[section] {
+        case .customization: return 32
+        default: return 24
+        }
     }
     
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        return UIView()
+        UIView()
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return 0
+        0
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        UITableView.automaticDimension
+    }
+    
+    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+        switch sections[indexPath.section] {
+        case .enterName: return 75
+        case .parameters(_): return 75
+        case .customization: return 460
+        }
     }
     
 }
@@ -307,8 +399,8 @@ extension NewTrackerViewController: UITableViewDelegate {
 
 extension NewTrackerViewController: EnterNameCellDelegate {
     
-    func enterNameCell(_ cell: EnterNameCell, didChangeText text: String) {
-        state.title = text
+    func enterNameCell(didChangeText text: String) {
+        updateStateTitle(text)
     }
     
     func updateCellLayout() {
@@ -323,11 +415,33 @@ extension NewTrackerViewController: EnterNameCellDelegate {
 extension NewTrackerViewController: ScheduleViewControllerDelegate {
     
     func getConfiguredSchedule(_ schedule: Set<Weekday>) {
-        state.schedule = schedule
-        let indexPath = IndexPath(row: ParameterType.schedule.rawValue, section: SectionType.parameters.rawValue)
-        tableView.reloadRows(at: [indexPath], with: .none)
+        updateStateSchedule(schedule)
+        tableView.reloadData()
     }
     
 }
 
+// MARK: - CustomizationCellDelegate
 
+extension NewTrackerViewController: CustomizationCellDelegate {
+    
+    func customizationCell(didChangeEmoji emoji: String) {
+        updateStateEmoji(emoji)
+    }
+    
+    func customizationCell(didChangeColor color: UIColor?) {
+        updateStateColor(color)
+    }
+    
+}
+
+// MARK: - CategoryListViewControllerDelegate
+
+extension NewTrackerViewController: CategoryListViewControllerDelegate {
+    
+    func categoryListVC(didSelectCategory category: TrackerCategory) {
+        updateStateCategory(category)
+        tableView.reloadData()
+    }
+    
+}

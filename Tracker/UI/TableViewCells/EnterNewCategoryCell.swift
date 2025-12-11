@@ -1,20 +1,20 @@
 import UIKit
 
-final class EnterNameCell: UITableViewCell {
+final class EnterNewCategoryCell: UITableViewCell {
     
     // MARK: - Identifier
     
-    static let reuseID = "EnterNameReuseIdentifier"
+    static let reuseID = "EnterNewCategoryCellReuseIdentifier"
     
     // MARK: - Delegate
     
-    weak var delegate: EnterNameCellDelegate?
+    weak var delegate: EnterNewCategoryCellDelegate?
     
     // MARK: - Views
     
-    private lazy var nameTextField: UITextField = {
+    private lazy var categoryNameTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Введите название трекера"
+        textField.placeholder = "Введите название категории"
         textField.font = .systemFont(ofSize: 17, weight: .regular)
         textField.textColor = .ypBlack
         textField.clearButtonMode = .whileEditing
@@ -63,13 +63,14 @@ final class EnterNameCell: UITableViewCell {
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        assertionFailure("❌init(coder:) has not been implemented")
+        return nil
     }
     
     // MARK: - Configure Dependencies
     
     private func configDependencies() {
-        nameTextField.delegate = self
+        categoryNameTextField.delegate = self
     }
     
     // MARK: - Setup UI
@@ -77,7 +78,7 @@ final class EnterNameCell: UITableViewCell {
     private func setupUI() {
         selectionStyle = .none
         contentView.addSubview(stackView)
-        containerView.addSubview(nameTextField)
+        containerView.addSubview(categoryNameTextField)
         setupConstraints()
         setupActions()
     }
@@ -86,7 +87,7 @@ final class EnterNameCell: UITableViewCell {
     
     private func setupConstraints() {
         [
-            nameTextField,
+            categoryNameTextField,
             containerView,
             errorLabel,
             stackView
@@ -103,25 +104,33 @@ final class EnterNameCell: UITableViewCell {
             
             errorLabel.heightAnchor.constraint(equalToConstant: 38),
             
-            nameTextField.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
-            nameTextField.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
-            nameTextField.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
+            categoryNameTextField.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
+            categoryNameTextField.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
+            categoryNameTextField.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
         ])
     }
     
     // MARK: - Setup Actions
     
     private func setupActions() {
-        nameTextField.addTarget(self, action: #selector(nameTextFieldEditingChanged), for: .editingChanged)
+        categoryNameTextField.addTarget(self, action: #selector(categoryNameTextFieldEditingChanged), for: .editingChanged)
     }
     
     // MARK: - Actions
     
-    @objc private func nameTextFieldEditingChanged() {
-        let text = nameTextField.text ?? ""
-        errorLabel.isHidden = !isTooLong(string: text)
-        performTableViewUpdates()
-        delegate?.enterNameCell(self, didChangeText: text)
+    @objc private func categoryNameTextFieldEditingChanged() {
+        let text = categoryNameTextField.text ?? ""
+        
+        let isLong = isTooLong(string: text)
+        let wasHidden = errorLabel.isHidden
+        let shouldBeHidden = !isLong
+        
+        errorLabel.isHidden = shouldBeHidden
+        if wasHidden != shouldBeHidden {
+            performTableViewUpdates()
+        }
+        
+        delegate?.enterNewCategoryCell(didChangeText: text)
     }
     
     // MARK: - Private Methods
@@ -131,13 +140,14 @@ final class EnterNameCell: UITableViewCell {
     }
     
     private func isTooLong(string: String) -> Bool {
-        return string.count > maxCharacters
+        string.count > maxCharacters
     }
+    
 }
 
 // MARK: - UITextFieldDelegate
 
-extension EnterNameCell: UITextFieldDelegate {
+extension EnterNewCategoryCell: UITextFieldDelegate {
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let currentText = textField.text ?? ""
@@ -158,4 +168,3 @@ extension EnterNameCell: UITextFieldDelegate {
     }
     
 }
-

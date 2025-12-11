@@ -23,7 +23,8 @@ final class TrackerCategoryHeader: UICollectionReusableView {
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        assertionFailure("❌init(coder:) has not been implemented")
+        return nil
     }
     
     // MARK: - Setup UI
@@ -48,8 +49,8 @@ final class TrackerCategoryHeader: UICollectionReusableView {
     
     // MARK: - Public Methods
     
-    func configure(category: TrackerCategory) {
-        titleLabel.text = category.title
+    func configure(title: String) {
+        titleLabel.text = title
     }
     
 }

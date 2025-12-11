@@ -6,7 +6,7 @@ extension Date {
     }
     
     func isFutureDate() -> Bool {
-        return Calendar.current.compare(self, to: Date(), toGranularity: .day) == .orderedDescending
+        Calendar.current.compare(self, to: Date(), toGranularity: .day) == .orderedDescending
     }
     
     func excludeTime() -> Date {
