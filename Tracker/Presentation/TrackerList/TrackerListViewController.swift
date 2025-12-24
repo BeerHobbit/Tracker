@@ -93,8 +93,8 @@ final class TrackerListViewController: UIViewController {
     
     // MARK: - Private Properties
     
-    private let trackerStore = TrackerStore()
-    private let trackerRecordStore = TrackerRecordStore()
+    private let trackerStore: TrackerStoreProtocol = TrackerStore()
+    private let trackerRecordStore: TrackerRecordStoreProtocol = TrackerRecordStore()
     
     private lazy var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -416,7 +416,7 @@ extension TrackerListViewController: NewTrackerViewControllerDelegate {
 
 extension TrackerListViewController: TrackerStoreDelegate {
     
-    func store(_ store: TrackerStore, didUpdate update: StoreUpdate) {
+    func store(_ store: TrackerStoreProtocol, didUpdate update: StoreUpdate) {
         trackersCollectionView.performBatchUpdates {
             let insertedSections = update.insertedSections
             let deletedSections = update.deletedSections
@@ -440,7 +440,7 @@ extension TrackerListViewController: TrackerStoreDelegate {
         updateEmptyState()
     }
     
-    func storeDidReloadFRC(_ store: TrackerStore) {
+    func storeDidReloadFRC(_ store: TrackerStoreProtocol) {
         trackersCollectionView.reloadData()
         updateEmptyState()
     }

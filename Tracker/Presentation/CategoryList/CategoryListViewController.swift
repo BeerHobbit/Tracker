@@ -60,7 +60,7 @@ final class CategoryListViewController: UIViewController {
     
     // MARK: - Private Properties
     
-    private let trackerCategoryStore = TrackerCategoryStore()
+    private let trackerCategoryStore: TrackerCategoryStoreProtocol = TrackerCategoryStore()
     
     private var categories: [TrackerCategory] = [] {
         didSet {
@@ -248,7 +248,7 @@ extension CategoryListViewController: NewCategoryViewControllerDelegate {
 
 extension CategoryListViewController: TrackerCategoryStoreDelegate {
     
-    func store(_ store: TrackerCategoryStore, didUpdate update: StoreUpdate) {
+    func store(_ store: TrackerCategoryStoreProtocol, didUpdate update: StoreUpdate) {
         categories = store.trackerCategories
         
         categoriesTableView.performBatchUpdates {
