@@ -36,6 +36,8 @@ final class OnboardingPageViewController: UIPageViewController {
     
     // MARK: - Private Properties
     
+    private let settingsStorage: SettingsStorageProtocol = SettingsStorage()
+    
     private lazy var pages: [OnboardingScreenViewController] = {
         let firstPage = OnboardingScreenViewController(pageType: .first)
         firstPage.view.backgroundColor = .red
@@ -107,7 +109,7 @@ final class OnboardingPageViewController: UIPageViewController {
             return
         }
         
-        UserDefaults.standard.set(true, forKey: "didFinishOnboarding")
+        settingsStorage.didFinishOnboarding = true
         
         let newRoot = MainTabBarController()
         UIView.transition(
@@ -167,11 +169,4 @@ extension OnboardingPageViewController: UIPageViewControllerDelegate {
         pageControl.currentPage = currentIndex
     }
     
-}
-
-#Preview {
-    OnboardingPageViewController(
-        transitionStyle: .scroll,
-        navigationOrientation: .horizontal
-    )
 }
