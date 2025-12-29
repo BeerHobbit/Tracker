@@ -93,24 +93,24 @@ class BaseTableViewCell: UITableViewCell {
     // MARK: - Public Methods
     
     func configAppearance(isFirst: Bool, isLast: Bool) {
-        if isFirst && isLast {
-            containerView.layer.cornerRadius = 16
+        switch (isFirst, isLast) {
+        case (true, true):
             containerView.layer.maskedCorners = [
                 .layerMinXMinYCorner, .layerMaxXMinYCorner,
                 .layerMinXMaxYCorner, .layerMaxXMaxYCorner
             ]
             separatorView.isHidden = true
-        }
-        else if isFirst {
-            containerView.layer.cornerRadius = 16
+        case (true, false):
             containerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
             separatorView.isHidden = false
-        }
-        else if isLast {
-            containerView.layer.cornerRadius = 16
+        case (false, true):
             containerView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
             separatorView.isHidden = true
+        case (false, false):
+            containerView.layer.maskedCorners = []
+            separatorView.isHidden = false
         }
+        containerView.layer.cornerRadius = isFirst || isLast ? 16 : 0
     }
     
 }

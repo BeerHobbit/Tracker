@@ -7,7 +7,7 @@ enum TrackerCategoryStoreError: Error {
     case decodingErrorInvalidCreatedAt
 }
 
-final class TrackerCategoryStore: NSObject {
+final class TrackerCategoryStore: NSObject, TrackerCategoryStoreProtocol {
     
     // MARK: - Delegate
     

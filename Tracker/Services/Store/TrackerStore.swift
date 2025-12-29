@@ -9,7 +9,7 @@ enum TrackerStoreError: Error {
     case decodingErrorInvalidColor
 }
 
-final class TrackerStore: NSObject {
+final class TrackerStore: NSObject, TrackerStoreProtocol {
     
     // MARK: - Delegate
     

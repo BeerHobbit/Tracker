@@ -2,6 +2,10 @@ import UIKit
 
 final class CategoryListViewController: UIViewController {
     
+    // MARK: - View Model
+    
+    private let viewModel: CategoryListViewModelProtocol
+    
     // MARK: - Delegate
     
     weak var delegate: CategoryListViewControllerDelegate?
@@ -58,17 +62,23 @@ final class CategoryListViewController: UIViewController {
     
     private let emptyStateGuide = UILayoutGuide()
     
-    // MARK: - Private Properties
+    // MARK: - Initializers
     
-    private let trackerCategoryStore = TrackerCategoryStore()
-    
-    private var categories: [TrackerCategory] = [] {
-        didSet {
-            updateEmptyState()
-        }
+    convenience init() {
+        let store = TrackerCategoryStore()
+        let viewModel = CategoryListViewModel(store: store)
+        self.init(viewModel: viewModel)
     }
     
-    private var selectedIndexPath: IndexPath?
+    init(viewModel: CategoryListViewModelProtocol) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        assertionFailure("❌init(coder:) has not been implemented")
+        return nil
+    }
     
     // MARK: - Life Cycle
     
@@ -76,8 +86,8 @@ final class CategoryListViewController: UIViewController {
         super.viewDidLoad()
         configDependencies()
         setupUI()
-        loadCategories()
-        updateEmptyState()
+        bind()
+        setInitialEmptyState()
     }
     
     // MARK: - Configure Dependencies
@@ -85,8 +95,6 @@ final class CategoryListViewController: UIViewController {
     private func configDependencies() {
         categoriesTableView.dataSource = self
         categoriesTableView.delegate = self
-        
-        trackerCategoryStore.delegate = self
     }
     
     // MARK: - Setup UI
@@ -166,12 +174,56 @@ final class CategoryListViewController: UIViewController {
     
     // MARK: - Private Methods
     
-    private func loadCategories() {
-        categories = trackerCategoryStore.trackerCategories
+    private func bind() {
+        viewModel.onUpdate = { [weak self] update in
+            self?.performTableViewUpdates(update)
+        }
+        
+        viewModel.onIsEmptyChanged = { [weak self] isEmpty in
+            self?.emptyStateStackView.isHidden = !isEmpty
+        }
     }
     
-    private func updateEmptyState() {
-        emptyStateStackView.isHidden = !categories.isEmpty
+    private func setInitialEmptyState() {
+        emptyStateStackView.isHidden = !viewModel.categories.isEmpty
+    }
+    
+    private func performTableViewUpdates(_ update: StoreUpdate) {
+        let deleted = Array(update.deletedIndexPaths).sorted(by: >)
+        let inserted = Array(update.insertedIndexPaths).sorted(by: <)
+        let updated = Array(update.updatedIndexPaths)
+        
+        categoriesTableView.performBatchUpdates {
+            if !update.deletedSections.isEmpty {
+                categoriesTableView.deleteSections(update.deletedSections, with: .automatic)
+            }
+            if !deleted.isEmpty {
+                categoriesTableView.deleteRows(at: deleted, with: .automatic)
+            }
+            if !update.insertedSections.isEmpty {
+                categoriesTableView.insertSections(update.insertedSections, with: .automatic)
+            }
+            if !inserted.isEmpty {
+                categoriesTableView.insertRows(at: inserted, with: .automatic)
+            }
+            if !updated.isEmpty {
+                categoriesTableView.reloadRows(at: updated, with: .automatic)
+            }
+            for move in update.movedIndexPaths {
+                categoriesTableView.moveRow(
+                    at: move.oldIndexPath,
+                    to: move.newIndexPath
+                )
+            }
+        } completion: { [weak self] _ in
+            guard let self else { return }
+            let numberOfRows = self.categoriesTableView.numberOfRows(inSection: 0)
+            if numberOfRows >= 2 {
+                let indexPath = IndexPath(row: numberOfRows - 2, section: 0)
+                self.categoriesTableView.reloadRows(at: [indexPath], with: .none)
+                
+            }
+        }
     }
     
 }
@@ -181,7 +233,7 @@ final class CategoryListViewController: UIViewController {
 extension CategoryListViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        categories.count
+        viewModel.categories.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -189,8 +241,9 @@ extension CategoryListViewController: UITableViewDataSource {
             assertionFailure("❌[dequeueReusableCell]: can't dequeue reusable cell with id: \(CategoryCell.reuseID) as \(String(describing: CategoryCell.self))")
             return UITableViewCell()
         }
+        let categories = viewModel.categories
         let title = categories[indexPath.row].title
-        let isSelected = indexPath == selectedIndexPath
+        let isSelected = indexPath == viewModel.selectedIndexPath
         let isFirst = indexPath.row == 0
         let isLast = indexPath.row == categories.count - 1
         
@@ -205,8 +258,8 @@ extension CategoryListViewController: UITableViewDataSource {
 extension CategoryListViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let oldIndexPath = selectedIndexPath
-        selectedIndexPath = indexPath
+        let oldIndexPath = viewModel.selectedIndexPath
+        viewModel.selectedIndexPath = indexPath
         
         var indexPathsToReload: [IndexPath] = [indexPath]
         if let oldIndexPath = oldIndexPath, oldIndexPath != indexPath {
@@ -214,7 +267,7 @@ extension CategoryListViewController: UITableViewDelegate {
         }
         tableView.reloadRows(at: indexPathsToReload, with: .none)
         
-        let category = categories[indexPath.row]
+        let category = viewModel.categories[indexPath.row]
         delegate?.categoryListVC(didSelectCategory: category)
         navigationController?.popViewController(animated: true)
     }
@@ -234,45 +287,8 @@ extension CategoryListViewController: UITableViewDelegate {
 extension CategoryListViewController: NewCategoryViewControllerDelegate {
     
     func didCreateNewCategory(title: String) {
-        let newCategory = TrackerCategory(id: UUID(), title: title, createdAt: Date())
-        do {
-            try trackerCategoryStore.addNewTrackerCategory(newCategory)
-        } catch {
-            assertionFailure("❌[addNewTrackerCategory]: can't add new object to TrackerCategoryCoreData, error: \(error)")
-        }
+        viewModel.createCategory(title: title)
     }
     
 }
 
-// MARK: - TrackerCategoryStoreDelegate
-
-extension CategoryListViewController: TrackerCategoryStoreDelegate {
-    
-    func store(_ store: TrackerCategoryStore, didUpdate update: StoreUpdate) {
-        categories = store.trackerCategories
-        
-        categoriesTableView.performBatchUpdates {
-            let deletedIndexPaths = Array(update.deletedIndexPaths)
-            let insertedIndexPaths = Array(update.insertedIndexPaths)
-            let updatedIndexPaths = Array(update.updatedIndexPaths)
-            
-            categoriesTableView.deleteRows(at: deletedIndexPaths, with: .automatic)
-            categoriesTableView.insertRows(at: insertedIndexPaths, with: .automatic)
-            categoriesTableView.reloadRows(at: updatedIndexPaths, with: .automatic)
-            for move in update.movedIndexPaths {
-                categoriesTableView.moveRow(
-                    at: move.oldIndexPath,
-                    to: move.newIndexPath
-                )
-            }
-        } completion: { [weak self] _ in
-            guard let self else { return }
-            let numberOfRows = self.categoriesTableView.numberOfRows(inSection: 0)
-            if numberOfRows >= 2 {
-                let indexPath = IndexPath(row: numberOfRows - 2, section: 0)
-                self.categoriesTableView.reloadRows(at: [indexPath], with: .none)
-            }
-        }
-    }
-    
-}

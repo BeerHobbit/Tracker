@@ -6,7 +6,7 @@ enum TrackerRecordStoreError: Error {
     case decodingErrorInvalidTrackerID
 }
 
-final class TrackerRecordStore {
+final class TrackerRecordStore: TrackerRecordStoreProtocol {
     
     // MARK: - Public Properties
     
