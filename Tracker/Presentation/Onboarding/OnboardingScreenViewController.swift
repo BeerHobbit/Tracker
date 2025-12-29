@@ -2,16 +2,9 @@ import UIKit
 
 final class OnboardingScreenViewController: UIViewController {
     
-    // MARK: - Types
-    
-    enum OnboardingPageType {
-        case first
-        case second
-    }
-    
     // MARK: - Views
     
-    lazy var label: UILabel = {
+    private lazy var label: UILabel = {
         let label = UILabel()
         label.textColor = .ypBlack.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
         label.font = .systemFont(ofSize: 32, weight: .bold)
@@ -21,7 +14,7 @@ final class OnboardingScreenViewController: UIViewController {
         return label
     }()
     
-    lazy var imageView: UIImageView = {
+    private lazy var imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -30,12 +23,12 @@ final class OnboardingScreenViewController: UIViewController {
     
     // MARK: - Private Properties
     
-    let pageType: OnboardingPageType
+    private let pageModel: PageModel
     
     // MARK: - Initializer
     
-    init(pageType: OnboardingPageType) {
-        self.pageType = pageType
+    init(pageModel: PageModel) {
+        self.pageModel = pageModel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -48,22 +41,16 @@ final class OnboardingScreenViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI(for: pageType)
+        setupUI(for: pageModel)
     }
     
     // MARK: - Setup UI
     
-    private func setupUI(for page: OnboardingPageType) {
+    private func setupUI(for page: PageModel) {
         view.addSubviews([imageView, label])
         
-        switch page {
-        case .first:
-            imageView.image = .onboarding1
-            label.text = "Отслеживайте только то, что хотите"
-        case .second:
-            imageView.image = .onboarding2
-            label.text = "Даже если это\nне литры воды и йога"
-        }
+        imageView.image = page.image
+        label.text = page.text
         
         setupConstraints()
     }
@@ -79,7 +66,7 @@ final class OnboardingScreenViewController: UIViewController {
             
             label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             label.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            label.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -270)
+            label.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -130)
         ])
     }
     

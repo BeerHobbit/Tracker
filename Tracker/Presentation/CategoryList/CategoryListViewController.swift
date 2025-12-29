@@ -176,13 +176,11 @@ final class CategoryListViewController: UIViewController {
     
     private func bind() {
         viewModel.onUpdate = { [weak self] update in
-            guard let self else { return }
-            self.performTableViewUpdates(update)
+            self?.performTableViewUpdates(update)
         }
         
         viewModel.onIsEmptyChanged = { [weak self] isEmpty in
-            guard let self else { return }
-            self.emptyStateStackView.isHidden = !isEmpty
+            self?.emptyStateStackView.isHidden = !isEmpty
         }
     }
     

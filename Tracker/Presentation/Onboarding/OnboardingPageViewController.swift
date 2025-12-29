@@ -2,6 +2,10 @@ import UIKit
 
 final class OnboardingPageViewController: UIPageViewController {
     
+    // MARK: - Binding
+    
+    var onFinish: (() -> Void)?
+    
     // MARK: - Views
     
     private lazy var pageControl: UIPageControl = {
@@ -18,7 +22,7 @@ final class OnboardingPageViewController: UIPageViewController {
         return pageControl
     }()
     
-    private lazy var readyButton: UIButton = {
+    private lazy var finishButton: UIButton = {
         let button = UIButton()
         button.setTitle("Вот это технологии!", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
@@ -36,15 +40,47 @@ final class OnboardingPageViewController: UIPageViewController {
     
     // MARK: - Private Properties
     
-    private let settingsStorage: SettingsStorageProtocol = SettingsStorage()
+    private let settingsStorage: SettingsStorageProtocol
     
     private lazy var pages: [OnboardingScreenViewController] = {
-        let firstPage = OnboardingScreenViewController(pageType: .first)
-        firstPage.view.backgroundColor = .red
-        let secondPage = OnboardingScreenViewController(pageType: .second)
-        secondPage.view.backgroundColor = .green
+        let firstPage = OnboardingScreenViewController(pageModel: .aboutTracking)
+        let secondPage = OnboardingScreenViewController(pageModel: .aboutWaterAndYoga)
         return [firstPage, secondPage]
     }()
+    
+    // MARK: - Initializer
+    
+    convenience override init(
+        transitionStyle style: UIPageViewController.TransitionStyle,
+        navigationOrientation: UIPageViewController.NavigationOrientation,
+        options: [UIPageViewController.OptionsKey : Any]? = nil
+    ) {
+        self.init(
+            transitionStyle: style,
+            navigationOrientation: navigationOrientation,
+            options: options,
+            settingsStorage: SettingsStorage()
+        )
+    }
+    
+    init(
+        transitionStyle: UIPageViewController.TransitionStyle,
+        navigationOrientation: UIPageViewController.NavigationOrientation,
+        options: [UIPageViewController.OptionsKey : Any]? = nil,
+        settingsStorage: SettingsStorageProtocol
+    ) {
+        self.settingsStorage = settingsStorage
+        super.init(
+            transitionStyle: transitionStyle,
+            navigationOrientation: navigationOrientation,
+            options: options
+        )
+    }
+    
+    required init?(coder: NSCoder) {
+        assertionFailure("❌init(coder:) has not been implemented")
+        return nil
+    }
     
     // MARK: - Life Cycle
     
@@ -53,6 +89,13 @@ final class OnboardingPageViewController: UIPageViewController {
         configDependencies()
         setVCs()
         setupUI()
+    }
+    
+    // MARK: - Overrides
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        setPagesSafeArea()
     }
     
     // MARK: - Configure Dependencies
@@ -65,7 +108,7 @@ final class OnboardingPageViewController: UIPageViewController {
     // MARK: - Setup UI
     
     private func setupUI() {
-        view.addSubviews([pageControl, readyButton])
+        view.addSubviews([pageControl, finishButton])
         setupConstraints()
         setupActions()
     }
@@ -74,12 +117,12 @@ final class OnboardingPageViewController: UIPageViewController {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            readyButton.heightAnchor.constraint(equalToConstant: 60),
-            readyButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            readyButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            readyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
+            finishButton.heightAnchor.constraint(equalToConstant: 60),
+            finishButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            finishButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            finishButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
             
-            pageControl.bottomAnchor.constraint(equalTo: readyButton.topAnchor, constant: -24),
+            pageControl.bottomAnchor.constraint(equalTo: finishButton.topAnchor, constant: -24),
             pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
     }
@@ -87,13 +130,13 @@ final class OnboardingPageViewController: UIPageViewController {
     // MARK: - Setup Actions
     
     private func setupActions() {
-        readyButton.addTarget(self, action: #selector(didTapReadyButton), for: .touchUpInside)
+        finishButton.addTarget(self, action: #selector(didTapFinishButton), for: .touchUpInside)
     }
     
     // MARK: - Actions
     
-    @objc private func didTapReadyButton() {
-        changeRootAndSave()
+    @objc private func didTapFinishButton() {
+        onFinish?()
     }
     
     // MARK: - Private Methods
@@ -103,23 +146,15 @@ final class OnboardingPageViewController: UIPageViewController {
         setViewControllers([first], direction: .forward, animated: true)
     }
     
-    private func changeRootAndSave() {
-        guard let window = UIApplication.shared.keyWindow else {
-            assertionFailure("❌ [changeRootAndSave] invalid window configuration")
-            return
+    private func setPagesSafeArea() {
+        let pageControlTop = pageControl.frame.minY
+        let desiredBottomSafe = view.bounds.height - pageControlTop
+        let currentBottomSafe = view.safeAreaInsets.bottom
+        let additionalSafe = max(0, desiredBottomSafe - currentBottomSafe)
+        
+        pages.forEach {
+            $0.additionalSafeAreaInsets.bottom = additionalSafe
         }
-        
-        settingsStorage.didFinishOnboarding = true
-        
-        let newRoot = MainTabBarController()
-        UIView.transition(
-            with: window,
-            duration: 0.35,
-            options: .transitionCrossDissolve,
-            animations: {
-                window.rootViewController = newRoot
-            }
-        )
     }
     
 }
