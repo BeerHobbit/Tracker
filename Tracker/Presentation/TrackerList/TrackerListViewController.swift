@@ -74,7 +74,7 @@ final class TrackerListViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.register(TrackerCell.self, forCellWithReuseIdentifier: TrackerCell.reuseID)
         collectionView.register(TrackerCategoryHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: TrackerCategoryHeader.reuseID)
-        collectionView.contentInset = UIEdgeInsets(top: 24, left: 0, bottom: 0, right: 0)
+        collectionView.contentInset = UIEdgeInsets(top: 24, left: 0, bottom: 50, right: 0)
         return collectionView
     }()
     
@@ -95,6 +95,12 @@ final class TrackerListViewController: UIViewController {
     
     private let trackerStore: TrackerStoreProtocol = TrackerStore()
     private let trackerRecordStore: TrackerRecordStoreProtocol = TrackerRecordStore()
+    private var completedTrackers: Set<TrackerRecord> = []
+    private var currentFilter: FilterType? {
+        didSet {
+            setWeekdayAndFilter()
+        }
+    }
     
     private lazy var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -109,8 +115,6 @@ final class TrackerListViewController: UIViewController {
         cellSpacing: 10
     )
     
-    private var completedTrackers: Set<TrackerRecord> = []
-    
     // MARK: - Life Cycle
     
     override func viewDidLoad() {
@@ -118,7 +122,7 @@ final class TrackerListViewController: UIViewController {
         configDependencies()
         setupUI()
         loadTrackerRecords()
-        setWeekday()
+        setWeekdayAndFilter()
         updateEmptyState()
     }
     
@@ -204,23 +208,21 @@ final class TrackerListViewController: UIViewController {
     private func setupActions() {
         datePicker.addTarget(self, action: #selector(datePickerValueChanged(_:)), for: .valueChanged)
         addTrackerButton.addTarget(self, action: #selector(addTrackerButtonDidTap), for: .touchUpInside)
+        filterButton.addTarget(self, action: #selector(filterButtonDidTap), for: .touchUpInside)
     }
     
     // MARK: - Actions
     
     @objc private func datePickerValueChanged(_ sender: UIDatePicker) {
-        let selectedDate = sender.date.excludeTime()
-        dateLabel.text = dateFormatter.string(from: selectedDate)
-        let weekday = getWeekday(from: selectedDate)
-        trackerStore.setCurrentWeekday(weekday)
+        updateCurrentWeekday(datePicker: sender)
     }
     
     @objc private func addTrackerButtonDidTap() {
-        let newTrackerVC = NewTrackerViewController()
-        newTrackerVC.delegate = self
-        let navigationVC = UINavigationController(rootViewController: newTrackerVC)
-        navigationVC.modalPresentationStyle = .popover
-        present(navigationVC, animated: true)
+        presentNewTrackerVC()
+    }
+    
+    @objc private func filterButtonDidTap() {
+        presentFilterScreenVC()
     }
     
     // MARK: - Private Methods
@@ -233,13 +235,65 @@ final class TrackerListViewController: UIViewController {
         cell.delegate = self
     }
     
-    private func setWeekday() {
-        let weekday = getWeekday(from: datePicker.date.excludeTime())
-        trackerStore.setCurrentWeekday(weekday)
+    private func updateCurrentWeekday(datePicker: UIDatePicker) {
+        let selectedDate = datePicker.date.excludeTime()
+        let today = Date().excludeTime()
+        if !selectedDate.isSameDay(as: today) && currentFilter == .todayTrackers {
+            currentFilter = .allTrackers
+        }
+        dateLabel.text = dateFormatter.string(from: selectedDate)
+        setWeekdayAndFilter()
+    }
+    
+    private func presentNewTrackerVC() {
+        let newTrackerVC = NewTrackerViewController()
+        newTrackerVC.delegate = self
+        let navigationVC = UINavigationController(rootViewController: newTrackerVC)
+        navigationVC.modalPresentationStyle = .popover
+        present(navigationVC, animated: true)
+    }
+    
+    private func presentFilterScreenVC() {
+        let filterScreenVC = FilterScreenViewController(
+            selectedFilter: currentFilter,
+            onFilterSelection: { [weak self] filter in
+                self?.selectFilter(filter)
+            })
+        let navigationVC = UINavigationController(rootViewController: filterScreenVC)
+        navigationVC.modalPresentationStyle = .popover
+        present(navigationVC, animated: true)
+    }
+    
+    private func selectFilter(_ filter: FilterType) {
+        if filter == .todayTrackers {
+            let today = Date().excludeTime()
+            datePicker.date = today
+            dateLabel.text = dateFormatter.string(from: today)
+        }
+        currentFilter = filter
+    }
+    
+    private func setWeekdayAndFilter() {
+        let date = datePicker.date.excludeTime()
+        let weekday = getWeekday(from: date)
+        let filter = currentFilter ?? .allTrackers
+        trackerStore.setCurrentWeekdayAndFilter(
+            weekday: weekday,
+            filter: filter,
+            date: date
+        )
     }
     
     private func updateEmptyState() {
         emptyStateStackView.isHidden = !trackersCollectionView.isEmpty
+        updateFilterButtonVisibility()
+    }
+    
+    private func updateFilterButtonVisibility() {
+        let date = datePicker.date.excludeTime()
+        let weekday = getWeekday(from: date)
+        let hasTrackers = trackerStore.hasTrackers(for: weekday)
+        filterButton.isHidden = !hasTrackers
     }
     
     private func getWeekday(from date: Date) -> Weekday {
@@ -417,7 +471,7 @@ extension TrackerListViewController: NewTrackerViewControllerDelegate {
 extension TrackerListViewController: TrackerStoreDelegate {
     
     func store(_ store: TrackerStoreProtocol, didUpdate update: StoreUpdate) {
-        trackersCollectionView.performBatchUpdates {
+        trackersCollectionView.performBatchUpdates({
             let insertedSections = update.insertedSections
             let deletedSections = update.deletedSections
             let deletedIndexPaths = Array(update.deletedIndexPaths)
@@ -436,8 +490,9 @@ extension TrackerListViewController: TrackerStoreDelegate {
                     to: move.newIndexPath
                 )
             }
-        }
-        updateEmptyState()
+        }, completion: { [weak self] _ in
+            self?.updateEmptyState()
+        })
     }
     
     func storeDidReloadFRC(_ store: TrackerStoreProtocol) {
@@ -447,3 +502,6 @@ extension TrackerListViewController: TrackerStoreDelegate {
     
 }
 
+#Preview {
+    MainTabBarController()
+}

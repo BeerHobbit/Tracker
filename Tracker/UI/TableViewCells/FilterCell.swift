@@ -1,10 +1,10 @@
 import UIKit
 
-final class CategoryCell: BaseTableViewCell {
+final class FilterCell: BaseTableViewCell {
     
     // MARK: - Identifier
     
-    static let reuseID = "CategoryCellReuseIdentifier"
+    static let reuseID = "FilterCellReuseIdentifier"
     
     // MARK: - Views
     
@@ -44,9 +44,15 @@ final class CategoryCell: BaseTableViewCell {
     
     // MARK: - Public Methods
     
-    func configure(title: String, isSelected: Bool, isFirst: Bool, isLast: Bool) {
-        titleLabel.text = title
-        checkImageView.isHidden = !isSelected
+    func configure(filter: FilterType, isSelected: Bool, isFirst: Bool, isLast: Bool) {
+        titleLabel.text = filter.title
+        
+        if filter == .allTrackers || filter == .todayTrackers {
+            checkImageView.isHidden = true
+        } else {
+            checkImageView.isHidden = !isSelected
+        }
+        
         configAppearance(isFirst: isFirst, isLast: isLast)
     }
     

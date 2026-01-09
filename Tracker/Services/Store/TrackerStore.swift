@@ -19,7 +19,21 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
     
     private let context: NSManagedObjectContext
     
-    private var currentWeekday: Weekday? = .monday
+    private var currentWeekday: Weekday?
+    private var currentFilter: FilterType? = .allTrackers
+    private var _currentDate: Date?
+    private var currentDate: Date? {
+        get {
+            _currentDate
+        }
+        set {
+            guard let newValue else {
+                _currentDate = nil
+                return
+            }
+            _currentDate = newValue.excludeTime()
+        }
+    }
     
     private var insertedSections: IndexSet?
     private var deletedSections: IndexSet?
@@ -48,8 +62,10 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
     
     // MARK: - Public Methods
     
-    func setCurrentWeekday(_ weekday: Weekday?) {
+    func setCurrentWeekdayAndFilter(weekday: Weekday?, filter: FilterType, date: Date) {
         currentWeekday = weekday
+        currentFilter = filter
+        currentDate = date
         fetchedResultsController = updateFetchResultsController()
         delegate?.storeDidReloadFRC(self)
     }
@@ -92,6 +108,14 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
             assertionFailure("❌[makeTracker]: Failed to decode Tracker: \(error)")
             return Tracker(id: UUID(), title: "", color: .colorSelection1, emoji: "", schedule: [], createdAt: Date())
         }
+    }
+    
+    func hasTrackers(for weekday: Weekday) -> Bool {
+        let request = TrackerCoreData.fetchRequest()
+        request.predicate = makeWeekdayPredicate(weekday: weekday)
+        request.fetchLimit = 1
+        let count = (try? context.count(for: request)) ?? 0
+        return count > 0
     }
     
     // MARK: - Private Methods
@@ -153,10 +177,47 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
             NSSortDescriptor(keyPath: \TrackerCoreData.category?.title, ascending: true),
             NSSortDescriptor(keyPath: \TrackerCoreData.createdAt, ascending: true)
         ]
-        if let currentWeekday = currentWeekday {
-            request.predicate = NSPredicate(format: "ANY %K == %d", #keyPath(TrackerCoreData.schedule.rawValue), currentWeekday.rawValue)
+        
+        var predicates: [NSPredicate] = []
+        
+        if let currentWeekday {
+            predicates.append(makeWeekdayPredicate(weekday: currentWeekday))
         }
+        if let currentFilter, let currentDate {
+            predicates.append(makeFilterPredicate(filter: currentFilter, date: currentDate))
+        }
+        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+        
         return request
+    }
+    
+    private func makeWeekdayPredicate(weekday: Weekday) -> NSPredicate {
+        return NSPredicate(
+            format: "ANY %K == %d",
+            #keyPath(TrackerCoreData.schedule.rawValue), weekday.rawValue
+        )
+    }
+    
+    private func makeFilterPredicate(filter: FilterType, date: Date) -> NSPredicate {
+        switch filter {
+        case .allTrackers:
+            return NSPredicate(value: true)
+            
+        case .todayTrackers:
+            return NSPredicate(value: true)
+            
+        case .completedTrackers:
+            return NSPredicate(
+                format: "ANY %K == %@",
+                #keyPath(TrackerCoreData.record.completionDate), date as NSDate
+            )
+            
+        case .unfinishedTrackers:
+            return NSPredicate(
+                format: "SUBQUERY(%K, $r, $r.completionDate == %@).@count == 0",
+                #keyPath(TrackerCoreData.record), date as NSDate
+            )
+        }
     }
     
     private func updateFetchResultsController() -> NSFetchedResultsController<TrackerCoreData> {

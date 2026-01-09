@@ -247,7 +247,12 @@ extension CategoryListViewController: UITableViewDataSource {
         let isFirst = indexPath.row == 0
         let isLast = indexPath.row == categories.count - 1
         
-        cell.configure(title: title, isSelected: isSelected, isFirst: isFirst, isLast: isLast)
+        cell.configure(
+            title: title,
+            isSelected: isSelected,
+            isFirst: isFirst,
+            isLast: isLast
+        )
         return cell
     }
     
