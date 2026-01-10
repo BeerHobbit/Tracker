@@ -21,6 +21,7 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
     
     private var currentWeekday: Weekday?
     private var currentFilter: FilterType? = .allTrackers
+    private var currentSearchText: String? = nil
     private var _currentDate: Date?
     private var currentDate: Date? {
         get {
@@ -66,6 +67,12 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
         currentWeekday = weekday
         currentFilter = filter
         currentDate = date
+        fetchedResultsController = updateFetchResultsController()
+        delegate?.storeDidReloadFRC(self)
+    }
+    
+    func setSearchText(_ text: String?) {
+        currentSearchText = text
         fetchedResultsController = updateFetchResultsController()
         delegate?.storeDidReloadFRC(self)
     }
@@ -186,6 +193,9 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
         if let currentFilter, let currentDate {
             predicates.append(makeFilterPredicate(filter: currentFilter, date: currentDate))
         }
+        if let currentSearchText, !currentSearchText.isEmpty {
+            predicates.append(makeSearchPredicate(searchText: currentSearchText))
+        }
         request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
         
         return request
@@ -218,6 +228,13 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
                 #keyPath(TrackerCoreData.record), date as NSDate
             )
         }
+    }
+    
+    private func makeSearchPredicate(searchText: String) -> NSPredicate {
+        return NSPredicate(
+            format: "%K CONTAINS[cd] %@",
+            #keyPath(TrackerCoreData.title), searchText
+        )
     }
     
     private func updateFetchResultsController() -> NSFetchedResultsController<TrackerCoreData> {

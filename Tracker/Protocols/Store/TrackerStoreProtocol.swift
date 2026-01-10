@@ -5,6 +5,7 @@ protocol TrackerStoreProtocol: AnyObject {
     var delegate: TrackerStoreDelegate? { get set }
     
     func setCurrentWeekdayAndFilter(weekday: Weekday?, filter: FilterType, date: Date)
+    func setSearchText(_ text: String?)
     func addNewTracker(_ tracker: Tracker, to category: TrackerCategory) throws
     func numberOfSections() -> Int
     func titleForSection(_ section: Int) -> String

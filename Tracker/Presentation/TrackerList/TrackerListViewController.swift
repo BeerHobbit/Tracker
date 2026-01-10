@@ -41,6 +41,7 @@ final class TrackerListViewController: UIViewController {
     
     private lazy var searchController: UISearchController = {
         let searchController = UISearchController(searchResultsController: nil)
+        searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Поиск"
         return searchController
     }()
@@ -91,6 +92,30 @@ final class TrackerListViewController: UIViewController {
         return button
     }()
     
+    private lazy var emptySearchImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = .emptySearch
+        return imageView
+    }()
+    
+    private lazy var emptySearchLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Ничего не найдено"
+        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .ypBlack
+        label.textAlignment = .center
+        return label
+    }()
+    
+    private lazy var emptySearchStackView: UIStackView = {
+        let stackView = UIStackView(arrangedSubviews: [emptySearchImageView, emptySearchLabel])
+        stackView.axis = .vertical
+        stackView.alignment = .center
+        stackView.spacing = 8
+        stackView.isHidden = true
+        return stackView
+    }()
+    
     // MARK: - Private Properties
     
     private let trackerStore: TrackerStoreProtocol = TrackerStore()
@@ -131,8 +156,9 @@ final class TrackerListViewController: UIViewController {
     private func configDependencies() {
         trackersCollectionView.dataSource = self
         trackersCollectionView.delegate = self
-        
         trackerStore.delegate = self
+        searchController.searchResultsUpdater = self
+        searchController.delegate = self
     }
     
     // MARK: - Setup UI
@@ -142,7 +168,8 @@ final class TrackerListViewController: UIViewController {
         view.addSubviews([
             emptyStateStackView,
             trackersCollectionView,
-            filterButton
+            filterButton,
+            emptySearchStackView
         ])
         
         setupNavigationBar()
@@ -173,7 +200,8 @@ final class TrackerListViewController: UIViewController {
             emptyStateImageView,
             emptyStateStackView,
             trackersCollectionView,
-            filterButton
+            filterButton,
+            emptySearchStackView
         ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
@@ -197,7 +225,13 @@ final class TrackerListViewController: UIViewController {
             filterButton.heightAnchor.constraint(equalToConstant: 50),
             filterButton.widthAnchor.constraint(equalToConstant: 114),
             filterButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
-            filterButton.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor)
+            filterButton.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            
+            emptySearchImageView.heightAnchor.constraint(equalToConstant: 80),
+            emptySearchImageView.widthAnchor.constraint(equalTo: emptySearchImageView.heightAnchor),
+            
+            emptySearchStackView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
+            emptySearchStackView.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor)
         ])
         datePicker.edgesToSuperview()
         dateLabel.edgesToSuperview()
@@ -209,6 +243,7 @@ final class TrackerListViewController: UIViewController {
         datePicker.addTarget(self, action: #selector(datePickerValueChanged(_:)), for: .valueChanged)
         addTrackerButton.addTarget(self, action: #selector(addTrackerButtonDidTap), for: .touchUpInside)
         filterButton.addTarget(self, action: #selector(filterButtonDidTap), for: .touchUpInside)
+        view.addGestureRecognizer(singleTapRecognizer())
     }
     
     // MARK: - Actions
@@ -223,6 +258,10 @@ final class TrackerListViewController: UIViewController {
     
     @objc private func filterButtonDidTap() {
         presentFilterScreenVC()
+    }
+    
+    @objc private func didSingleTap() {
+        navigationController?.view.endEditing(false)
     }
     
     // MARK: - Private Methods
@@ -336,6 +375,25 @@ final class TrackerListViewController: UIViewController {
     
     private func loadTrackerRecords() {
         completedTrackers = trackerRecordStore.trackerRecords
+    }
+    
+    private func singleTapRecognizer() -> UITapGestureRecognizer {
+        let singleTap = UITapGestureRecognizer(target: self, action: #selector(didSingleTap))
+        singleTap.numberOfTapsRequired = 1
+        singleTap.cancelsTouchesInView = false
+        return singleTap
+    }
+    
+    private func updateSearchState() {
+        let isEmpty = trackersCollectionView.isEmpty
+        filterButton.isHidden = isEmpty
+        emptySearchStackView.isHidden = !isEmpty
+        emptyStateStackView.isHidden = true
+    }
+    
+    private func resetSearchState() {
+        emptySearchStackView.isHidden = true
+        updateEmptyState()
     }
     
 }
@@ -498,6 +556,28 @@ extension TrackerListViewController: TrackerStoreDelegate {
     func storeDidReloadFRC(_ store: TrackerStoreProtocol) {
         trackersCollectionView.reloadData()
         updateEmptyState()
+    }
+    
+}
+
+// MARK: - UISearchResultsUpdating
+
+extension TrackerListViewController: UISearchResultsUpdating {
+    
+    func updateSearchResults(for searchController: UISearchController) {
+        let searchText = searchController.searchBar.text
+        trackerStore.setSearchText(searchText)
+        updateSearchState()
+    }
+    
+}
+
+// MARK: - UISearchControllerDelegate
+
+extension TrackerListViewController: UISearchControllerDelegate {
+    
+    func didDismissSearchController(_ searchController: UISearchController) {
+        resetSearchState()
     }
     
 }
