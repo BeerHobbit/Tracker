@@ -9,13 +9,13 @@ final class EditTrackerViewController: BaseEditTrackerViewController {
     // MARK: - Private Properties
     
     private let tracker: Tracker
-    private let quanity: Int
+    private let quantity: Int
     
     // MARK: - Initializer
     
-    init(tracker: Tracker, trackerCategory: TrackerCategory?, quanity: Int) {
+    init(tracker: Tracker, trackerCategory: TrackerCategory?, quantity: Int) {
         self.tracker = tracker
-        self.quanity = quanity
+        self.quantity = quantity
         super.init(nibName: nil, bundle: nil)
         state = NewTrackerState(
             title: tracker.title,
@@ -39,31 +39,35 @@ final class EditTrackerViewController: BaseEditTrackerViewController {
             navigationTitle: "Редактирование привычки",
             createButtonTitle: "Сохранить"
         )
+        let quantityString = getDayString(quantity)
+        setQuantityForEditTracker(quantityString)
     }
     
     override func didTapCreateButton() {
         delegate?.changeTracker(id: tracker.id, with: state)
-        super.didTapCreateButton()
+        dismiss(animated: true)
     }
     
-}
-
-#Preview {
-    UINavigationController(
-        rootViewController: EditTrackerViewController(
-            tracker: Tracker(
-                id: UUID(),
-                title: "Погладить кошку",
-                color: .colorSelection2,
-                emoji: "😻",
-                schedule: [.monday, .tuesday],
-                createdAt: Date()
-            ),
-            trackerCategory: TrackerCategory(
-                id: UUID(),
-                title: "Категория 1",
-                createdAt: Date()
-            ), quanity: 5
-        )
-    )
+    // MARK: - Private Methods
+    
+    private func getDayString(_ value: Int) -> String {
+        let mod10 = value % 10
+        let mod100 = value % 100
+        
+        let word: String = {
+            switch (mod100, mod10) {
+            case (11...14, _):
+                return "дней"
+            case (_, 1):
+                return "день"
+            case (_, 2...4):
+                return "дня"
+            default:
+                return "дней"
+            }
+        }()
+        
+        return "\(value) \(word)"
+    }
+    
 }

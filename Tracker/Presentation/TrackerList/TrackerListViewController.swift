@@ -291,8 +291,8 @@ final class TrackerListViewController: UIViewController {
     private func configureCell(_ cell: TrackerCell, at indexPath: IndexPath) {
         let tracker = trackerStore.tracker(at: indexPath)
         let isCompleted = isCompleted(id: tracker.id, for: datePicker.date)
-        let quanity = getCurrentQuanity(id: tracker.id)
-        cell.configure(from: tracker, isCompleted: isCompleted, quanity: quanity)
+        let quantity = getCurrentQuantity(id: tracker.id)
+        cell.configure(from: tracker, isCompleted: isCompleted, quantity: quantity)
         cell.delegate = self
     }
     
@@ -391,7 +391,7 @@ final class TrackerListViewController: UIViewController {
         }
     }
     
-    private func getCurrentQuanity(id: UUID) -> Int {
+    private func getCurrentQuantity(id: UUID) -> Int {
         completedTrackers.filter { $0.trackerID == id }.count
     }
     
@@ -421,11 +421,11 @@ final class TrackerListViewController: UIViewController {
     private func makeEditAction(tracker: Tracker, trackerCategory: TrackerCategory?) -> UIAction {
         return UIAction(title: "Редактировать") { [weak self] _ in
             guard let self else { return }
-            let trackerQuanity = getCurrentQuanity(id: tracker.id)
+            let trackerQuantity = getCurrentQuantity(id: tracker.id)
             let editTrackerVC = EditTrackerViewController(
                 tracker: tracker,
                 trackerCategory: trackerCategory,
-                quanity: trackerQuanity
+                quantity: trackerQuantity
             )
             editTrackerVC.delegate = self
             

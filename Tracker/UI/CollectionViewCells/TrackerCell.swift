@@ -44,13 +44,13 @@ final class TrackerCell: UICollectionViewCell {
         return label
     }()
     
-    private lazy var quanityLabel: UILabel = {
+    private lazy var quantityLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypBlack
         label.textAlignment = .left
         label.numberOfLines = 1
-        label.text = getDayString(quanity)
+        label.text = getDayString(quantity)
         
         return label
     }()
@@ -64,8 +64,8 @@ final class TrackerCell: UICollectionViewCell {
         return button
     }()
     
-    private lazy var quanityStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [quanityLabel, UIView(), completeButton])
+    private lazy var quantityStackView: UIStackView = {
+        let stackView = UIStackView(arrangedSubviews: [quantityLabel, UIView(), completeButton])
         stackView.axis = .horizontal
         stackView.distribution = .fill
         stackView.spacing = 0
@@ -78,9 +78,9 @@ final class TrackerCell: UICollectionViewCell {
     
     // MARK: - Private Properties
     
-    private var quanity: Int = 0 {
+    private var quantity: Int = 0 {
         didSet {
-            quanityLabel.text = getDayString(quanity)
+            quantityLabel.text = getDayString(quantity)
         }
     }
     private var fillColor: UIColor = .ypGray {
@@ -107,7 +107,7 @@ final class TrackerCell: UICollectionViewCell {
     private func setupUI() {
         contentView.addSubviews([
             cardView,
-            quanityStackView
+            quantityStackView
         ])
         cardView.addSubviews([
             emojiLabel,
@@ -125,9 +125,9 @@ final class TrackerCell: UICollectionViewCell {
             cardView,
             emojiLabel,
             titleLabel,
-            quanityLabel,
+            quantityLabel,
             completeButton,
-            quanityStackView
+            quantityStackView
         ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
@@ -136,10 +136,10 @@ final class TrackerCell: UICollectionViewCell {
             cardView.trailingAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.trailingAnchor),
             cardView.heightAnchor.constraint(equalToConstant: 90),
             
-            quanityStackView.topAnchor.constraint(equalTo: cardView.bottomAnchor),
-            quanityStackView.leadingAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.leadingAnchor),
-            quanityStackView.trailingAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.trailingAnchor),
-            quanityStackView.bottomAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.bottomAnchor),
+            quantityStackView.topAnchor.constraint(equalTo: cardView.bottomAnchor),
+            quantityStackView.leadingAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.leadingAnchor),
+            quantityStackView.trailingAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.trailingAnchor),
+            quantityStackView.bottomAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.bottomAnchor),
             
             emojiLabel.widthAnchor.constraint(equalToConstant: 24),
             emojiLabel.heightAnchor.constraint(equalTo: emojiLabel.widthAnchor),
@@ -166,11 +166,11 @@ final class TrackerCell: UICollectionViewCell {
     
     // MARK: - Public Methods
     
-    func configure(from tracker: Tracker, isCompleted: Bool, quanity: Int) {
+    func configure(from tracker: Tracker, isCompleted: Bool, quantity: Int) {
         emojiLabel.text = tracker.emoji
         titleLabel.text = tracker.title
         fillColor = tracker.color
-        self.quanity = quanity
+        self.quantity = quantity
         
         let plusImage = UIImage.plusButton.withRenderingMode(.alwaysTemplate)
         let doneImage = UIImage.doneButton.withRenderingMode(.alwaysTemplate)

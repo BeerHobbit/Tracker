@@ -17,6 +17,36 @@ class BaseEditTrackerViewController: UIViewController {
     
     // MARK: - Views
     
+    private let topSpacerView: UIView = {
+        let view = UIView()
+        view.isHidden = true
+        return view
+    }()
+    
+    private lazy var quantityLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 32, weight: .bold)
+        label.textColor = .ypBlack
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
+    }()
+    
+    private lazy var vStackView: UIStackView = {
+        let stackView = UIStackView(
+            arrangedSubviews: [
+                topSpacerView,
+                quantityLabel,
+                tableView
+            ]
+        )
+        stackView.axis = .vertical
+        stackView.spacing = 16
+        stackView.setCustomSpacing(24, after: topSpacerView)
+        stackView.distribution = .fill
+        return stackView
+    }()
+    
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
         
@@ -113,8 +143,10 @@ class BaseEditTrackerViewController: UIViewController {
         createButton.setTitle(createButtonTitle, for: .normal)
     }
     
-    func setQuanityForEditTracker(_ quanity: Int) {
-        
+    func setQuantityForEditTracker(_ quantityString: String) {
+        topSpacerView.isHidden = false
+        quantityLabel.isHidden = false
+        quantityLabel.text = quantityString
     }
     
     // MARK: - Configure Dependencies
@@ -132,7 +164,7 @@ class BaseEditTrackerViewController: UIViewController {
     func setupUI() {
         view.backgroundColor = .ypWhite
         view.addSubviews([
-            tableView,
+            vStackView,
             buttonStackView
         ])
         
@@ -150,17 +182,17 @@ class BaseEditTrackerViewController: UIViewController {
     
     // MARK: - Setup Constraints
     
-    func setupConstraints() {
+    private func setupConstraints() {
         [
-            tableView,
+            vStackView,
             buttonStackView
         ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: buttonStackView.topAnchor, constant: -16),
+            vStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            vStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            vStackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            vStackView.bottomAnchor.constraint(equalTo: buttonStackView.topAnchor, constant: -16),
             
             buttonStackView.heightAnchor.constraint(equalToConstant: 60),
             buttonStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
@@ -452,8 +484,4 @@ extension BaseEditTrackerViewController: CategoryListViewControllerDelegate {
         tableView.reloadData()
     }
     
-}
-
-#Preview {
-    UINavigationController(rootViewController: BaseEditTrackerViewController())
 }
