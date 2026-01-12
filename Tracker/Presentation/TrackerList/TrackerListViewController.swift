@@ -716,7 +716,3 @@ extension TrackerListViewController: EditTrackerViewControllerDelegate {
     }
     
 }
-
-#Preview {
-    MainTabBarController()
-}

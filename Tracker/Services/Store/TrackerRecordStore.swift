@@ -6,7 +6,15 @@ enum TrackerRecordStoreError: Error {
     case decodingErrorInvalidTrackerID
 }
 
-final class TrackerRecordStore: TrackerRecordStoreProtocol {
+final class TrackerRecordStore: NSObject, TrackerRecordStoreProtocol, RecordsCountProtocol {
+    
+    // MARK: - Delegate
+    
+    weak var recordsCountDelegate: RecordsCountDelegate? {
+        didSet {
+            recordsCountDidChange()
+        }
+    }
     
     // MARK: - Public Properties
     
@@ -28,9 +36,28 @@ final class TrackerRecordStore: TrackerRecordStoreProtocol {
     
     private let context: NSManagedObjectContext
     
+    private lazy var fetchedResultsController: NSFetchedResultsController<TrackerRecordCoreData> = {
+        let request = TrackerRecordCoreData.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \TrackerRecordCoreData.completionDate, ascending: true)]
+        
+        let controller = NSFetchedResultsController(
+            fetchRequest: request,
+            managedObjectContext: context,
+            sectionNameKeyPath: nil,
+            cacheName: nil
+        )
+        controller.delegate = self
+        do {
+            try controller.performFetch()
+        } catch {
+            assertionFailure("❌[fetchedResultsController.performFetch()] Failed to perform fetch: \(error)")
+        }
+        return controller
+    }()
+    
     // MARK: - Initializer
     
-    convenience init() {
+    convenience override init() {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("❌AppDelegate is unavailable")
         }
@@ -40,6 +67,9 @@ final class TrackerRecordStore: TrackerRecordStoreProtocol {
     
     init(context: NSManagedObjectContext) {
         self.context = context
+        super.init()
+        _ = fetchedResultsController
+        recordsCountDidChange()
     }
     
     // MARK: - Public Methods
@@ -86,6 +116,19 @@ final class TrackerRecordStore: TrackerRecordStoreProtocol {
         ])
         request.fetchLimit = 1
         return try? context.fetch(request).first
+    }
+    
+    private func recordsCountDidChange() {
+        let count = fetchedResultsController.fetchedObjects?.count ?? 0
+        recordsCountDelegate?.didUpdateRecordsCount(count)
+    }
+    
+}
+
+extension TrackerRecordStore: NSFetchedResultsControllerDelegate {
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<any NSFetchRequestResult>) {
+        recordsCountDidChange()
     }
     
 }
