@@ -6,6 +6,7 @@ final class CategoryListViewModel: CategoryListViewModelProtocol {
     
     var onUpdate: ((StoreUpdate) -> Void)?
     var onIsEmptyChanged: ((Bool) -> Void)?
+    var onInitialSelection: (() -> Void)?
     
     // MARK: - Public Properties
     
@@ -50,6 +51,17 @@ final class CategoryListViewModel: CategoryListViewModelProtocol {
         }
     }
     
+    func setInitialSelection(for category: TrackerCategory?) {
+        guard let category,let index = findCategoryIndex(for: category) else {
+            selectedIndexPath = nil
+            return
+        }
+        selectedIndexPath = IndexPath(row: index, section: 0)
+        DispatchQueue.main.async { [weak self] in
+            self?.onInitialSelection?()
+        }
+    }
+    
     // MARK: - Configure Dependencies
     
     private func configDependencies() {
@@ -60,6 +72,10 @@ final class CategoryListViewModel: CategoryListViewModelProtocol {
     
     private func loadCategories() {
         categories = store.trackerCategories
+    }
+    
+    private func findCategoryIndex(for category: TrackerCategory) -> Int? {
+        return categories.firstIndex(where: { $0.id == category.id })
     }
     
 }

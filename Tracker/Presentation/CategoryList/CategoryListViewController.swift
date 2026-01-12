@@ -90,6 +90,12 @@ final class CategoryListViewController: UIViewController {
         setInitialEmptyState()
     }
     
+    // MARK: - Public Methods
+    
+    func configure(selectedCategory: TrackerCategory?) {
+        viewModel.setInitialSelection(for: selectedCategory)
+    }
+    
     // MARK: - Configure Dependencies
     
     private func configDependencies() {
@@ -182,6 +188,10 @@ final class CategoryListViewController: UIViewController {
         viewModel.onIsEmptyChanged = { [weak self] isEmpty in
             self?.emptyStateStackView.isHidden = !isEmpty
         }
+        
+        viewModel.onInitialSelection = { [weak self] in
+            self?.categoriesTableView.reloadData()
+        }
     }
     
     private func setInitialEmptyState() {
@@ -189,26 +199,22 @@ final class CategoryListViewController: UIViewController {
     }
     
     private func performTableViewUpdates(_ update: StoreUpdate) {
-        let deleted = Array(update.deletedIndexPaths).sorted(by: >)
-        let inserted = Array(update.insertedIndexPaths).sorted(by: <)
+        let deleted = Array(update.deletedIndexPaths)
+        let inserted = Array(update.insertedIndexPaths)
         let updated = Array(update.updatedIndexPaths)
         
+        let movedToNewIndexPaths = Array(update.movedIndexPaths.map { $0.newIndexPath })
+        let updatedButNotMoved = Set(updated).subtracting(
+            Set(update.movedIndexPaths.map { $0.oldIndexPath })
+        )
+        let updatedButNotMovedIndexPaths = Array(updatedButNotMoved)
+        
         categoriesTableView.performBatchUpdates {
-            if !update.deletedSections.isEmpty {
-                categoriesTableView.deleteSections(update.deletedSections, with: .automatic)
-            }
-            if !deleted.isEmpty {
-                categoriesTableView.deleteRows(at: deleted, with: .automatic)
-            }
-            if !update.insertedSections.isEmpty {
-                categoriesTableView.insertSections(update.insertedSections, with: .automatic)
-            }
-            if !inserted.isEmpty {
-                categoriesTableView.insertRows(at: inserted, with: .automatic)
-            }
-            if !updated.isEmpty {
-                categoriesTableView.reloadRows(at: updated, with: .automatic)
-            }
+            categoriesTableView.deleteSections(update.deletedSections, with: .automatic)
+            categoriesTableView.deleteRows(at: deleted, with: .automatic)
+            categoriesTableView.insertSections(update.insertedSections, with: .automatic)
+            categoriesTableView.insertRows(at: inserted, with: .automatic)
+            categoriesTableView.reloadRows(at: updatedButNotMovedIndexPaths, with: .automatic)
             for move in update.movedIndexPaths {
                 categoriesTableView.moveRow(
                     at: move.oldIndexPath,
@@ -221,7 +227,9 @@ final class CategoryListViewController: UIViewController {
             if numberOfRows >= 2 {
                 let indexPath = IndexPath(row: numberOfRows - 2, section: 0)
                 self.categoriesTableView.reloadRows(at: [indexPath], with: .none)
-                
+            }
+            if !movedToNewIndexPaths.isEmpty {
+                self.categoriesTableView.reloadRows(at: movedToNewIndexPaths, with: .none)
             }
         }
     }

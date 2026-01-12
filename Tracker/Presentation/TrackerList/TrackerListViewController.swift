@@ -118,8 +118,8 @@ final class TrackerListViewController: UIViewController {
     
     // MARK: - Private Properties
     
-    private let trackerStore: TrackerStoreProtocol = TrackerStore()
-    private let trackerRecordStore: TrackerRecordStoreProtocol = TrackerRecordStore()
+    private let trackerStore: TrackerStoreProtocol
+    private let trackerRecordStore: TrackerRecordStoreProtocol
     private var completedTrackers: Set<TrackerRecord> = []
     private var currentFilter: FilterType? {
         didSet {
@@ -139,6 +139,28 @@ final class TrackerListViewController: UIViewController {
         rightInset: 16,
         cellSpacing: 10
     )
+    
+    // MARK: - Initializer
+    
+    convenience init() {
+        let trackerStore = TrackerStore()
+        let trackerRecordStore = TrackerRecordStore()
+        self.init(trackerStore: trackerStore, trackerRecordStore: trackerRecordStore)
+    }
+    
+    init(
+        trackerStore: TrackerStoreProtocol,
+        trackerRecordStore: TrackerRecordStoreProtocol,
+    ) {
+        self.trackerStore = trackerStore
+        self.trackerRecordStore = trackerRecordStore
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        assertionFailure("❌init(coder:) has not been implemented")
+        return nil
+    }
     
     // MARK: - Life Cycle
     
@@ -396,6 +418,51 @@ final class TrackerListViewController: UIViewController {
         updateEmptyState()
     }
     
+    private func makeEditAction(tracker: Tracker, trackerCategory: TrackerCategory?) -> UIAction {
+        return UIAction(title: "Редактировать") { [weak self] _ in
+            guard let self else { return }
+            let trackerQuanity = getCurrentQuanity(id: tracker.id)
+            let editTrackerVC = EditTrackerViewController(
+                tracker: tracker,
+                trackerCategory: trackerCategory,
+                quanity: trackerQuanity
+            )
+            editTrackerVC.delegate = self
+            
+            let navigationVC = UINavigationController(rootViewController: editTrackerVC)
+            navigationVC.modalPresentationStyle = .popover
+            
+            self.present(navigationVC, animated: true)
+        }
+    }
+    
+    private func makeDeleteAction(tracker: Tracker) -> UIAction {
+        return UIAction(title: "Удалить", attributes: [.destructive]) { [weak self] _ in
+            self?.presentDeletionAlert(trackerToDelete: tracker)
+        }
+    }
+    
+    private func presentDeletionAlert(trackerToDelete tracker: Tracker) {
+        let alert = UIAlertController(
+            title: nil,
+            message: "Уверены что хотите удалить трекер?",
+            preferredStyle: .actionSheet
+        )
+        let deleteAction = UIAlertAction(title: "Удалить", style: .destructive) { [weak self] _ in
+            do {
+                try self?.trackerStore.deleteTracker(id: tracker.id)
+            } catch {
+                assertionFailure("❌[deleteTracker]: Tracker was not found, id: \(tracker.id), title: \(tracker.title), error: \(error)")
+                return
+            }
+        }
+        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel)
+        alert.addAction(deleteAction)
+        alert.addAction(cancelAction)
+        
+        present(alert, animated: true)
+    }
+    
 }
 
 // MARK: - UICollectionViewDataSource
@@ -469,6 +536,52 @@ extension TrackerListViewController: UICollectionViewDelegateFlowLayout {
     
 }
 
+// MARK: - UICollectionViewDelegate
+
+extension TrackerListViewController: UICollectionViewDelegate {
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        contextMenuConfigurationForItemsAt indexPaths: [IndexPath],
+        point: CGPoint
+    ) -> UIContextMenuConfiguration? {
+        guard indexPaths.count > 0 else {
+            return nil
+        }
+        let indexPath = indexPaths[0]
+        let tracker = trackerStore.tracker(at: indexPath)
+        let trackerCategory = trackerStore.category(of: tracker.id)
+        
+        let editAction = makeEditAction(tracker: tracker, trackerCategory: trackerCategory)
+        let deleteAction = makeDeleteAction(tracker: tracker)
+        
+        return UIContextMenuConfiguration(
+            actionProvider: { _ in
+                return UIMenu(children: [editAction, deleteAction])
+            }
+        )
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        contextMenuConfiguration configuration: UIContextMenuConfiguration,
+        highlightPreviewForItemAt indexPath: IndexPath
+    ) -> UITargetedPreview? {
+        guard let cell = collectionView.cellForItem(at: indexPath) as? TrackerCell else { return nil }
+        return UITargetedPreview(view: cell.getCardView())
+    }
+    
+    func collectionView(
+        _ collectionView: UICollectionView,
+        contextMenuConfiguration configuration: UIContextMenuConfiguration,
+        dismissalPreviewForItemAt indexPath: IndexPath
+    ) -> UITargetedPreview? {
+        guard let cell = collectionView.cellForItem(at: indexPath) as? TrackerCell else { return nil }
+        return UITargetedPreview(view: cell.getCardView())
+    }
+    
+}
+
 // MARK: - TrackerCellDelegate
 
 extension TrackerListViewController: TrackerCellDelegate {
@@ -529,19 +642,24 @@ extension TrackerListViewController: NewTrackerViewControllerDelegate {
 extension TrackerListViewController: TrackerStoreDelegate {
     
     func store(_ store: TrackerStoreProtocol, didUpdate update: StoreUpdate) {
+        let insertedSections = update.insertedSections
+        let deletedSections = update.deletedSections
+        let deletedIndexPaths = Array(update.deletedIndexPaths)
+        let insertedIndexPaths = Array(update.insertedIndexPaths)
+        let updatedIndexPaths = Array(update.updatedIndexPaths)
+        
+        let movedToNewIndexPaths = Array(update.movedIndexPaths.map { $0.newIndexPath })
+        let updatedButNotMoved = Set(updatedIndexPaths).subtracting(
+            Set(update.movedIndexPaths.map { $0.oldIndexPath })
+        )
+        let updatedButNotMovedIndexPaths = Array(updatedButNotMoved)
+        
         trackersCollectionView.performBatchUpdates({
-            let insertedSections = update.insertedSections
-            let deletedSections = update.deletedSections
-            let deletedIndexPaths = Array(update.deletedIndexPaths)
-            let insertedIndexPaths = Array(update.insertedIndexPaths)
-            let updatedIndexPaths = Array(update.updatedIndexPaths)
-            
             trackersCollectionView.deleteSections(deletedSections)
-            trackersCollectionView.insertSections(insertedSections)
-            
             trackersCollectionView.deleteItems(at: deletedIndexPaths)
+            trackersCollectionView.insertSections(insertedSections)
             trackersCollectionView.insertItems(at: insertedIndexPaths)
-            trackersCollectionView.reloadItems(at: updatedIndexPaths)
+            trackersCollectionView.reloadItems(at: updatedButNotMovedIndexPaths)
             for move in update.movedIndexPaths {
                 trackersCollectionView.moveItem(
                     at: move.oldIndexPath,
@@ -549,6 +667,9 @@ extension TrackerListViewController: TrackerStoreDelegate {
                 )
             }
         }, completion: { [weak self] _ in
+            if !movedToNewIndexPaths.isEmpty {
+                self?.trackersCollectionView.reloadItems(at: movedToNewIndexPaths)
+            }
             self?.updateEmptyState()
         })
     }
@@ -578,6 +699,20 @@ extension TrackerListViewController: UISearchControllerDelegate {
     
     func didDismissSearchController(_ searchController: UISearchController) {
         resetSearchState()
+    }
+    
+}
+
+// MARK: - EditTrackerViewControllerDelegate
+
+extension TrackerListViewController: EditTrackerViewControllerDelegate {
+    
+    func changeTracker(id: UUID, with config: NewTrackerState) {
+        do {
+            try trackerStore.changeTracker(with: id, config: config)
+        } catch {
+            assertionFailure("❌[changeTracker]: Failed to change existing tracker, id: \(id), error: \(error)")
+        }
     }
     
 }

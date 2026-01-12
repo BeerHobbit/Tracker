@@ -67,6 +67,14 @@ final class EnterNameCell: UITableViewCell {
         return nil
     }
     
+    // MARK: - Public Methods
+    
+    func configure(with text: String) {
+        nameTextField.text = text
+        let isLong = isTooLong(string: text)
+        errorLabel.isHidden = !isLong
+    }
+    
     // MARK: - Configure Dependencies
     
     private func configDependencies() {

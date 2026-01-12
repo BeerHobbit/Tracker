@@ -109,6 +109,13 @@ final class CustomizationCell: UITableViewCell {
         return CGSize(width: targetSize.width, height: height)
     }
     
+    // MARK: - Public Methods
+    
+    func configure(emoji: String, color: UIColor?) {
+        setIndexPaths(emoji: emoji, color: color)
+        setSelection(emoji: emoji, color: color)
+    }
+    
     // MARK: - Configure Dependencies
     
     private func configDependencies() {
@@ -127,6 +134,46 @@ final class CustomizationCell: UITableViewCell {
     
     private func setupConstraints() {
         customizationCollectionView.edgesToSuperview()
+    }
+    
+    // MARK: - Private Methods
+    
+    private func findEmojiIndex(_ emoji: String) -> Int? {
+        guard case .emojis(let section) = sections[0] else { return nil }
+        return section.emojis.firstIndex(of: emoji)
+    }
+    
+    private func findColorIndex(_ color: UIColor) -> Int? {
+        guard case .colors(let section) = sections[1] else { return nil }
+        return section.colors.firstIndex(where: { $0.cgColor == color.cgColor })
+    }
+    
+    private func setIndexPaths(emoji: String, color: UIColor?) {
+        if !emoji.isEmpty {
+            if let emojiIndex = findEmojiIndex(emoji) {
+                let indexPath = IndexPath(item: emojiIndex, section: 0)
+                selectedIndexPaths[0] = indexPath
+                self.emoji = emoji
+            }
+        }
+        if let color {
+            if let colorIndex = findColorIndex(color) {
+                let IndexPath = IndexPath(item: colorIndex, section: 1)
+                selectedIndexPaths[1] = IndexPath
+                self.color = color
+            }
+        }
+    }
+    
+    private func setSelection(emoji: String, color: UIColor?) {
+        if let emojiIndex = findEmojiIndex(emoji), !emoji.isEmpty {
+            let indexPath = IndexPath(item: emojiIndex, section: 0)
+            customizationCollectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
+        }
+        if let color, let colorIndex = findColorIndex(color) {
+            let indexPath = IndexPath(item: colorIndex, section: 1)
+            customizationCollectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
+        }
     }
     
 }

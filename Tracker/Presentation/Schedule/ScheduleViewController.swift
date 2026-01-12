@@ -43,6 +43,13 @@ final class ScheduleViewController: UIViewController {
         setupUI()
     }
     
+    // MARK: - Public Methods
+    
+    func configure(with schedule: Set<Weekday>) {
+        chosenWeekdays = schedule
+        scheduleTableView.reloadData()
+    }
+    
     // MARK: - Configure Dependencies
     
     private func configDependencies() {

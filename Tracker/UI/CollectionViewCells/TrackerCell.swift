@@ -181,6 +181,10 @@ final class TrackerCell: UICollectionViewCell {
         }
     }
     
+    func getCardView() -> UIView {
+        cardView
+    }
+    
     // MARK: - Private Methods
     
     private func getDayString(_ value: Int) -> String {

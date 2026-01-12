@@ -7,6 +7,8 @@ enum TrackerStoreError: Error {
     case decodingErrorInvalidEmoji
     case decodingErrorInvalidCreatedAt
     case decodingErrorInvalidColor
+    case trackerNotFound
+    case categoryNotFound
 }
 
 final class TrackerStore: NSObject, TrackerStoreProtocol {
@@ -78,7 +80,7 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
     }
     
     func addNewTracker(_ tracker: Tracker, to category: TrackerCategory) throws {
-        guard let categoryCoreData = findCategory(by: category.id) else { throw TrackerCategoryStoreError.decodingErrorInvalidID }
+        guard let categoryCoreData = findCategory(by: category.id) else { throw TrackerStoreError.categoryNotFound }
         
         let trackerCoreData = TrackerCoreData(context: context)
         trackerCoreData.trackerID = tracker.id
@@ -92,6 +94,12 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
         
         addSchedule(tracker.schedule, to: trackerCoreData)
         
+        try context.save()
+    }
+    
+    func deleteTracker(id: UUID) throws {
+        guard let tracker = findTracker(by: id) else { throw TrackerStoreError.trackerNotFound }
+        context.delete(tracker)
         try context.save()
     }
     
@@ -117,12 +125,48 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
         }
     }
     
+    func category(of trackerID: UUID) -> TrackerCategory? {
+        guard let trackerCoreData = findTracker(by: trackerID),
+              let categoryCoreData = trackerCoreData.category
+        else {
+            return nil
+        }
+        
+        do {
+            return try makeTrackerCategory(from: categoryCoreData)
+        } catch {
+            assertionFailure("❌[makeTrackerCategory]: Failed to decode TrackerCategory: \(error)")
+            return nil
+        }
+    }
+    
     func hasTrackers(for weekday: Weekday) -> Bool {
         let request = TrackerCoreData.fetchRequest()
         request.predicate = makeWeekdayPredicate(weekday: weekday)
         request.fetchLimit = 1
         let count = (try? context.count(for: request)) ?? 0
         return count > 0
+    }
+    
+    func changeTracker(with id: UUID, config: NewTrackerState) throws {
+        guard let trackerCoreData = findTracker(by: id) else {
+            throw TrackerStoreError.trackerNotFound
+        }
+        trackerCoreData.title = config.title
+        trackerCoreData.color = config.color
+        trackerCoreData.emoji = config.emoji
+        
+        if let categoryID = config.category?.id, categoryID != trackerCoreData.category?.categoryID {
+            guard let newCategory = findCategory(by: categoryID) else {
+                throw TrackerStoreError.categoryNotFound
+            }
+            trackerCoreData.category?.removeFromTrackers(trackerCoreData)
+            trackerCoreData.category = newCategory
+            newCategory.addToTrackers(trackerCoreData)
+        }
+        updateSchedule(config.schedule, for: trackerCoreData)
+        
+        try context.save()
     }
     
     // MARK: - Private Methods
@@ -144,9 +188,24 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
         )
     }
     
+    private func findTracker(by id: UUID) -> TrackerCoreData? {
+        let request = TrackerCoreData.fetchRequest()
+        request.predicate = NSPredicate(
+            format: "%K == %@",
+            #keyPath(TrackerCoreData.trackerID),
+            id as CVarArg
+        )
+        request.fetchLimit = 1
+        return try? context.fetch(request).first
+    }
+    
     private func findCategory(by id: UUID) -> TrackerCategoryCoreData? {
         let request = TrackerCategoryCoreData.fetchRequest()
-        request.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCategoryCoreData.categoryID), id as CVarArg)
+        request.predicate = NSPredicate(
+            format: "%K == %@",
+            #keyPath(TrackerCategoryCoreData.categoryID),
+            id as CVarArg
+        )
         request.fetchLimit = 1
         return try? context.fetch(request).first
     }
@@ -162,6 +221,16 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
             weekdayCoreData.addToTrackers(tracker)
             tracker.addToSchedule(weekdayCoreData)
         }
+    }
+    
+    private func updateSchedule(_ schedule: Set<Weekday>, for tracker: TrackerCoreData) {
+        if let oldSchedule = tracker.schedule as? Set<WeekdayCoreData> {
+            for weekday in oldSchedule {
+                weekday.removeFromTrackers(tracker)
+            }
+            tracker.removeFromSchedule(NSSet(set: oldSchedule))
+        }
+        addSchedule(schedule, to: tracker)
     }
     
     private func getSchedule(from tracker: TrackerCoreData) -> Set<Weekday> {
@@ -252,6 +321,17 @@ final class TrackerStore: NSObject, TrackerStoreProtocol {
             assertionFailure("❌[fetchedResultsController.performFetch()] Failed to perform fetch: \(error)")
         }
         return newController
+    }
+    
+    private func makeTrackerCategory(from categoryCoreData: TrackerCategoryCoreData) throws -> TrackerCategory {
+        guard let id = categoryCoreData.categoryID else { throw TrackerCategoryStoreError.decodingErrorInvalidID }
+        guard let title = categoryCoreData.title else { throw TrackerCategoryStoreError.decodingErrorInvalidTitle }
+        guard let createdAt = categoryCoreData.createdAt else { throw TrackerCategoryStoreError.decodingErrorInvalidCreatedAt }
+        return TrackerCategory(
+            id: id,
+            title: title,
+            createdAt: createdAt
+        )
     }
     
 }
