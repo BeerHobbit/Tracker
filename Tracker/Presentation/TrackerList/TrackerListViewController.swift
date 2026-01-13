@@ -120,6 +120,7 @@ final class TrackerListViewController: UIViewController {
     
     private let trackerStore: TrackerStoreProtocol
     private let trackerRecordStore: TrackerRecordStoreProtocol
+    private let analytics: AnalyticsService = AnalyticsService()
     private var completedTrackers: Set<TrackerRecord> = []
     private var currentFilter: FilterType? {
         didSet {
@@ -171,6 +172,16 @@ final class TrackerListViewController: UIViewController {
         loadTrackerRecords()
         setWeekdayAndFilter()
         updateEmptyState()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        analytics.report(event: .open, screen: .trackerList, item: nil)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        analytics.report(event: .close, screen: .trackerList, item: nil)
     }
     
     // MARK: - Configure Dependencies
@@ -275,10 +286,12 @@ final class TrackerListViewController: UIViewController {
     }
     
     @objc private func addTrackerButtonDidTap() {
+        analytics.report(event: .click, screen: .trackerList, item: .addTrack)
         presentNewTrackerVC()
     }
     
     @objc private func filterButtonDidTap() {
+        analytics.report(event: .click, screen: .trackerList, item: .filter)
         presentFilterScreenVC()
     }
     
@@ -421,6 +434,8 @@ final class TrackerListViewController: UIViewController {
     private func makeEditAction(tracker: Tracker, trackerCategory: TrackerCategory?) -> UIAction {
         return UIAction(title: "Редактировать") { [weak self] _ in
             guard let self else { return }
+            self.analytics.report(event: .click, screen: .trackerList, item: .edit)
+            
             let trackerQuantity = getCurrentQuantity(id: tracker.id)
             let editTrackerVC = EditTrackerViewController(
                 tracker: tracker,
@@ -438,6 +453,7 @@ final class TrackerListViewController: UIViewController {
     
     private func makeDeleteAction(tracker: Tracker) -> UIAction {
         return UIAction(title: "Удалить", attributes: [.destructive]) { [weak self] _ in
+            self?.analytics.report(event: .click, screen: .trackerList, item: .delete)
             self?.presentDeletionAlert(trackerToDelete: tracker)
         }
     }
@@ -587,6 +603,8 @@ extension TrackerListViewController: UICollectionViewDelegate {
 extension TrackerListViewController: TrackerCellDelegate {
     
     func completeButtonDidTap(in cell: TrackerCell) {
+        analytics.report(event: .click, screen: .trackerList, item: .track)
+        
         let currentDate = datePicker.date
         guard !currentDate.isFutureDate() else {
             presentSimpleAlert(
