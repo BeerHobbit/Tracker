@@ -76,6 +76,7 @@ final class EnterNewCategoryCell: UITableViewCell {
     // MARK: - Setup UI
     
     private func setupUI() {
+        contentView.backgroundColor = .ypWhite
         selectionStyle = .none
         contentView.addSubview(stackView)
         containerView.addSubview(categoryNameTextField)

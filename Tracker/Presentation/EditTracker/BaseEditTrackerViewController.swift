@@ -83,6 +83,14 @@ class BaseEditTrackerViewController: UIViewController {
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .ypGray
         
+        button.setTitleColor(.ypWhite, for: .normal)
+        button.setTitleColor(
+            UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .light ? .ypWhite : .ypBlack
+            },
+            for: .disabled
+        )
+        
         button.layer.masksToBounds = true
         button.layer.cornerRadius = 16
         
@@ -484,4 +492,10 @@ extension BaseEditTrackerViewController: CategoryListViewControllerDelegate {
         tableView.reloadData()
     }
     
+}
+
+
+#Preview {
+    let navController = UINavigationController(rootViewController: BaseEditTrackerViewController())
+    return navController
 }

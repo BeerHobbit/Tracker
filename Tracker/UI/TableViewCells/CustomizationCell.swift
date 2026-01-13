@@ -22,6 +22,7 @@ final class CustomizationCell: UITableViewCell {
     private lazy var customizationCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .ypWhite
         collectionView.isScrollEnabled = false
         collectionView.allowsSelection = true
         collectionView.allowsMultipleSelection = true
@@ -126,6 +127,7 @@ final class CustomizationCell: UITableViewCell {
     // MARK: - Setup UI
     
     private func setupUI() {
+        contentView.backgroundColor = .ypWhite
         contentView.addSubview(customizationCollectionView)
         setupConstraints()
     }

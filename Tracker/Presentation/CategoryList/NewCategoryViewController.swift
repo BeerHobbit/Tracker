@@ -23,7 +23,15 @@ final class NewCategoryViewController: UIViewController {
     private lazy var readyButton: UIButton = {
         let button = UIButton()
         button.setTitle("Готово", for: .normal)
+        
         button.setTitleColor(.ypWhite, for: .normal)
+        button.setTitleColor(
+            UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .light ? .ypWhite : .ypBlack
+            },
+            for: .disabled
+        )
+        
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .ypGray
         
@@ -184,4 +192,8 @@ extension NewCategoryViewController: EnterNewCategoryCellDelegate {
         75
     }
     
+}
+
+#Preview {
+    NewCategoryViewController()
 }
