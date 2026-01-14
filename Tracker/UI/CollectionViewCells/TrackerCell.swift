@@ -50,7 +50,13 @@ final class TrackerCell: UICollectionViewCell {
         label.textColor = .ypBlack
         label.textAlignment = .left
         label.numberOfLines = 1
-        label.text = getDayString(quantity)
+        
+        let daysString = String.localizedStringWithFormat(
+            NSLocalizedString("days_quantity", comment: ""),
+            quantity
+        )
+        
+        label.text = daysString
         
         return label
     }()
@@ -80,9 +86,14 @@ final class TrackerCell: UICollectionViewCell {
     
     private var quantity: Int = 0 {
         didSet {
-            quantityLabel.text = getDayString(quantity)
+            let daysString = String.localizedStringWithFormat(
+                NSLocalizedString("days_quantity", comment: ""),
+                quantity
+            )
+            quantityLabel.text = daysString
         }
     }
+    
     private var fillColor: UIColor = .ypGray {
         didSet {
             cardView.backgroundColor = fillColor
@@ -183,28 +194,6 @@ final class TrackerCell: UICollectionViewCell {
     
     func getCardView() -> UIView {
         cardView
-    }
-    
-    // MARK: - Private Methods
-    
-    private func getDayString(_ value: Int) -> String {
-        let mod10 = value % 10
-        let mod100 = value % 100
-        
-        let word: String = {
-            switch (mod100, mod10) {
-            case (11...14, _):
-                return "дней"
-            case (_, 1):
-                return "день"
-            case (_, 2...4):
-                return "дня"
-            default:
-                return "дней"
-            }
-        }()
-        
-        return "\(value) \(word)"
     }
     
 }

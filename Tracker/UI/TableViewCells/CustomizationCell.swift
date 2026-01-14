@@ -60,7 +60,7 @@ final class CustomizationCell: UITableViewCell {
     private let sections: [Section] = [
         .emojis(
             EmojisSection(
-                title: "Emoji",
+                title: "customization.emoji_section".localized,
                 emojis: [
                     "🙂", "😻", "🌺", "🐶", "❤️", "😱",
                     "😇", "😡", "🥶", "🤔", "🙌", "🍔",
@@ -70,7 +70,7 @@ final class CustomizationCell: UITableViewCell {
         ),
         .colors(
             ColorsSection(
-                title: "Цвет",
+                title: "customization.color_section".localized,
                 colors: [
                     .colorSelection1, .colorSelection2, .colorSelection3, .colorSelection4,
                     .colorSelection5, .colorSelection6, .colorSelection7,.colorSelection8,

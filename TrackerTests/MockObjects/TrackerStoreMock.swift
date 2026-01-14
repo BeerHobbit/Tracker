@@ -21,7 +21,7 @@ final class TrackerStoreMock: TrackerStoreProtocol {
     }
     
     func numberOfSections() -> Int {
-        1
+        2
     }
     
     func titleForSection(_ section: Int) -> String {

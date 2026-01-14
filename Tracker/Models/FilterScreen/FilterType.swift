@@ -7,10 +7,10 @@ enum FilterType {
     
     var title: String {
         switch self {
-        case .allTrackers: return "Все трекеры"
-        case .todayTrackers: return "Трекеры на сегодня"
-        case .completedTrackers: return "Завершенные"
-        case .unfinishedTrackers: return "Не завершенные"
+        case .allTrackers: return "filter_screen.all".localized
+        case .todayTrackers: return "filter_screen.today".localized
+        case .completedTrackers: return "filter_screen.completed".localized
+        case .unfinishedTrackers: return "filter_screen.unfinished".localized
         }
     }
     

@@ -14,7 +14,7 @@ final class EnterNameCell: UITableViewCell {
     
     private lazy var nameTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Введите название трекера"
+        textField.placeholder = "enter_name.placeholder".localized
         textField.font = .systemFont(ofSize: 17, weight: .regular)
         textField.textColor = .ypBlack
         textField.clearButtonMode = .whileEditing
@@ -35,7 +35,10 @@ final class EnterNameCell: UITableViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .regular)
         label.textColor = .ypRed
-        label.text = "Ограничение 38 символов"
+        label.text = String.localizedStringWithFormat(
+            NSLocalizedString("enter_name.error", comment: ""),
+            maxCharacters
+        )
         label.textAlignment = .center
         label.isHidden = true
         return label

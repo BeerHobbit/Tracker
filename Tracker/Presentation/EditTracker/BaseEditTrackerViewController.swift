@@ -64,7 +64,7 @@ class BaseEditTrackerViewController: UIViewController {
     private lazy var cancelButton: UIButton = {
         let button = UIButton()
         
-        button.setTitle("Отменить", for: .normal)
+        button.setTitle("edit_tracker.cancel_button".localized, for: .normal)
         button.setTitleColor(.ypRed, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .clear
@@ -130,8 +130,8 @@ class BaseEditTrackerViewController: UIViewController {
     private let sections: [Section] = [
         .enterName,
         .parameters([
-            .category(ParameterItem(title: "Категория")),
-            .schedule(ParameterItem(title: "Расписание"))
+            .category(ParameterItem(title: "edit_tracker.category".localized)),
+            .schedule(ParameterItem(title: "edit_tracker.schedule".localized))
         ]),
         .customization
     ]
@@ -492,10 +492,4 @@ extension BaseEditTrackerViewController: CategoryListViewControllerDelegate {
         tableView.reloadData()
     }
     
-}
-
-
-#Preview {
-    let navController = UINavigationController(rootViewController: BaseEditTrackerViewController())
-    return navController
 }

@@ -11,8 +11,8 @@ final class NewTrackerViewController: BaseEditTrackerViewController {
     override func setupUI() {
         super.setupUI()
         setTitles(
-            navigationTitle: "Создание привычки",
-            createButtonTitle: "Создать"
+            navigationTitle: "new_tracker.navigation_title".localized,
+            createButtonTitle: "new_tracker.create_button".localized
         )
     }
     

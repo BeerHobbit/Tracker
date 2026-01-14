@@ -20,7 +20,7 @@ final class CategoryListViewController: UIViewController {
     
     private lazy var emptyStateLabel: UILabel = {
         let label = UILabel()
-        label.text = "Привычки и события можно объединить по смыслу"
+        label.text = "category_list.empty_state".localized
         label.numberOfLines = 2
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 12, weight: .medium)
@@ -38,7 +38,7 @@ final class CategoryListViewController: UIViewController {
     
     private lazy var addCategoryButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Добавить категорию", for: .normal)
+        button.setTitle("category_list.add_category_button".localized, for: .normal)
         button.setTitleColor(.ypWhite, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .ypBlack
@@ -121,7 +121,7 @@ final class CategoryListViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        navigationItem.title = "Категория"
+        navigationItem.title = "category_list.navigation_title".localized
         navigationController?.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor.ypBlack,
             .font: UIFont.systemFont(ofSize: 16, weight: .medium)

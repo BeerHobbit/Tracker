@@ -76,7 +76,7 @@ final class FilterScreenViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        navigationItem.title = "Фильтры"
+        navigationItem.title = "filter_screen.navigation_title".localized
         navigationController?.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor.ypBlack,
             .font: UIFont.systemFont(ofSize: 16, weight: .medium)

@@ -36,38 +36,19 @@ final class EditTrackerViewController: BaseEditTrackerViewController {
     override func setupUI() {
         super.setupUI()
         setTitles(
-            navigationTitle: "Редактирование привычки",
-            createButtonTitle: "Сохранить"
+            navigationTitle: "edit_tracker.navigation_title".localized,
+            createButtonTitle: "edit_tracker.create_button".localized
         )
-        let quantityString = getDayString(quantity)
+        let quantityString = String.localizedStringWithFormat(
+            NSLocalizedString("days_quantity", comment: ""),
+            quantity
+        )
         setQuantityForEditTracker(quantityString)
     }
     
     override func didTapCreateButton() {
         delegate?.changeTracker(id: tracker.id, with: state)
         dismiss(animated: true)
-    }
-    
-    // MARK: - Private Methods
-    
-    private func getDayString(_ value: Int) -> String {
-        let mod10 = value % 10
-        let mod100 = value % 100
-        
-        let word: String = {
-            switch (mod100, mod10) {
-            case (11...14, _):
-                return "дней"
-            case (_, 1):
-                return "день"
-            case (_, 2...4):
-                return "дня"
-            default:
-                return "дней"
-            }
-        }()
-        
-        return "\(value) \(word)"
     }
     
 }

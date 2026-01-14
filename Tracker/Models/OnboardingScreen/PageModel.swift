@@ -8,10 +8,10 @@ struct PageModel {
 extension PageModel {
     static let aboutTracking = PageModel(
         image: .onboarding1,
-        text: "Отслеживайте только то, что хотите"
+        text: "onboarding_page.about_tracking".localized
     )
     static let aboutWaterAndYoga = PageModel(
         image: .onboarding2,
-        text: "Даже если это\nне литры воды и йога"
+        text: "onboarding_page.about_water_and_yoga".localized
     )
 }

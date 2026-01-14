@@ -16,7 +16,7 @@ final class StatisticsViewController: UIViewController {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypBlack
-        label.text = "Трекеров завершено"
+        label.text = "statistics.records_count_subtitle".localized
         return label
     }()
     
@@ -51,7 +51,7 @@ final class StatisticsViewController: UIViewController {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypBlack
-        label.text = "Анализировать пока нечего"
+        label.text = "statistics.empty_statistics".localized
         return label
     }()
     
@@ -144,7 +144,7 @@ final class StatisticsViewController: UIViewController {
             .foregroundColor: UIColor.ypBlack,
             .font: UIFont.systemFont(ofSize: 34, weight: .bold)
         ]
-        navigationItem.title = "Статистика"
+        navigationItem.title = "statistics.navigation_title".localized
     }
     
     // MARK: - Setup Constraints

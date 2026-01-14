@@ -42,7 +42,7 @@ final class TrackerListViewController: UIViewController {
     private lazy var searchController: UISearchController = {
         let searchController = UISearchController(searchResultsController: nil)
         searchController.obscuresBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = "Поиск"
+        searchController.searchBar.placeholder = "tracker_list.search_placeholder".localized
         return searchController
     }()
     
@@ -54,7 +54,7 @@ final class TrackerListViewController: UIViewController {
     
     private lazy var emptyStateLabel: UILabel = {
         let label = UILabel()
-        label.text = "Что будем отслеживать?"
+        label.text = "tracker_list.empty_state".localized
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypBlack
         label.textAlignment = .center
@@ -81,7 +81,7 @@ final class TrackerListViewController: UIViewController {
     
     private lazy var filterButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Фильтры", for: .normal)
+        button.setTitle("tracker_list.filters".localized, for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .regular)
         button.backgroundColor = .ypBlue
@@ -100,7 +100,7 @@ final class TrackerListViewController: UIViewController {
     
     private lazy var emptySearchLabel: UILabel = {
         let label = UILabel()
-        label.text = "Ничего не найдено"
+        label.text = "tracker_list.search_empty".localized
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypBlack
         label.textAlignment = .center
@@ -216,7 +216,7 @@ final class TrackerListViewController: UIViewController {
             .foregroundColor: UIColor.ypBlack,
             .font: UIFont.systemFont(ofSize: 34, weight: .bold)
         ]
-        navigationItem.title = "Трекеры"
+        navigationItem.title = "tracker_list.navigation_title".localized
         
         navigationItem.searchController = searchController
         
@@ -432,7 +432,7 @@ final class TrackerListViewController: UIViewController {
     }
     
     private func makeEditAction(tracker: Tracker, trackerCategory: TrackerCategory?) -> UIAction {
-        return UIAction(title: "Редактировать") { [weak self] _ in
+        return UIAction(title: "tracker_list.edit_action".localized) { [weak self] _ in
             guard let self else { return }
             self.analytics.report(event: .click, screen: .trackerList, item: .edit)
             
@@ -452,7 +452,7 @@ final class TrackerListViewController: UIViewController {
     }
     
     private func makeDeleteAction(tracker: Tracker) -> UIAction {
-        return UIAction(title: "Удалить", attributes: [.destructive]) { [weak self] _ in
+        return UIAction(title: "tracker_list.delete_action".localized, attributes: [.destructive]) { [weak self] _ in
             self?.analytics.report(event: .click, screen: .trackerList, item: .delete)
             self?.presentDeletionAlert(trackerToDelete: tracker)
         }
@@ -461,10 +461,10 @@ final class TrackerListViewController: UIViewController {
     private func presentDeletionAlert(trackerToDelete tracker: Tracker) {
         let alert = UIAlertController(
             title: nil,
-            message: "Уверены что хотите удалить трекер?",
+            message: "tracker_list.delete_alert_message".localized,
             preferredStyle: .actionSheet
         )
-        let deleteAction = UIAlertAction(title: "Удалить", style: .destructive) { [weak self] _ in
+        let deleteAction = UIAlertAction(title: "tracker_list.delete_action".localized, style: .destructive) { [weak self] _ in
             do {
                 try self?.trackerStore.deleteTracker(id: tracker.id)
             } catch {
@@ -472,7 +472,7 @@ final class TrackerListViewController: UIViewController {
                 return
             }
         }
-        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel)
+        let cancelAction = UIAlertAction(title: "tracker_list.delete_alert_cancel".localized, style: .cancel)
         alert.addAction(deleteAction)
         alert.addAction(cancelAction)
         
@@ -608,9 +608,9 @@ extension TrackerListViewController: TrackerCellDelegate {
         let currentDate = datePicker.date
         guard !currentDate.isFutureDate() else {
             presentSimpleAlert(
-                title: "Не получится",
-                message: "Нельзя отметить привычку для будущей даты",
-                actionTitle: "Хорошо"
+                title: "tracker_list.future_date_alert_title".localized,
+                message: "tracker_list.future_date_alert_message".localized,
+                actionTitle: "tracker_list.future_date_alert_action".localized
             )
             return
         }

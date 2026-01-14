@@ -22,7 +22,7 @@ final class NewCategoryViewController: UIViewController {
     
     private lazy var readyButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Готово", for: .normal)
+        button.setTitle("new_category.ready_button".localized, for: .normal)
         
         button.setTitleColor(.ypWhite, for: .normal)
         button.setTitleColor(
@@ -82,7 +82,7 @@ final class NewCategoryViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        navigationItem.title = "Новая категория"
+        navigationItem.title = "new_category.navigation_title".localized
         navigationController?.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor.ypBlack,
             .font: UIFont.systemFont(ofSize: 16, weight: .medium)
@@ -192,8 +192,4 @@ extension NewCategoryViewController: EnterNewCategoryCellDelegate {
         75
     }
     
-}
-
-#Preview {
-    NewCategoryViewController()
 }
