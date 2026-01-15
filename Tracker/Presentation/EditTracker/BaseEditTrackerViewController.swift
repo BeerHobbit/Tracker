@@ -1,25 +1,51 @@
 import UIKit
 
-final class NewTrackerViewController: UIViewController {
-    
-    // MARK: - Delegate
-    
-    weak var delegate: NewTrackerViewControllerDelegate?
+class BaseEditTrackerViewController: UIViewController {
     
     // MARK: - Types
     
-    private enum Section {
+    enum Section {
         case enterName
         case parameters([Parameter])
         case customization
     }
     
-    private enum Parameter {
+    enum Parameter {
         case category(ParameterItem)
         case schedule(ParameterItem)
     }
     
     // MARK: - Views
+    
+    private let topSpacerView: UIView = {
+        let view = UIView()
+        view.isHidden = true
+        return view
+    }()
+    
+    private lazy var quantityLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 32, weight: .bold)
+        label.textColor = .ypBlack
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
+    }()
+    
+    private lazy var vStackView: UIStackView = {
+        let stackView = UIStackView(
+            arrangedSubviews: [
+                topSpacerView,
+                quantityLabel,
+                tableView
+            ]
+        )
+        stackView.axis = .vertical
+        stackView.spacing = 16
+        stackView.setCustomSpacing(24, after: topSpacerView)
+        stackView.distribution = .fill
+        return stackView
+    }()
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
@@ -38,7 +64,7 @@ final class NewTrackerViewController: UIViewController {
     private lazy var cancelButton: UIButton = {
         let button = UIButton()
         
-        button.setTitle("Отменить", for: .normal)
+        button.setTitle("edit_tracker.cancel_button".localized, for: .normal)
         button.setTitleColor(.ypRed, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .clear
@@ -54,9 +80,16 @@ final class NewTrackerViewController: UIViewController {
     private lazy var createButton: UIButton = {
         let button = UIButton()
         
-        button.setTitle("Создать", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .ypGray
+        
+        button.setTitleColor(.ypWhite, for: .normal)
+        button.setTitleColor(
+            UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .light ? .ypWhite : .ypBlack
+            },
+            for: .disabled
+        )
         
         button.layer.masksToBounds = true
         button.layer.cornerRadius = 16
@@ -76,7 +109,7 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - State
     
-    private var state = NewTrackerState(
+    var state = NewTrackerState(
         title: "",
         category: nil,
         schedule: [],
@@ -97,8 +130,8 @@ final class NewTrackerViewController: UIViewController {
     private let sections: [Section] = [
         .enterName,
         .parameters([
-            .category(ParameterItem(title: "Категория")),
-            .schedule(ParameterItem(title: "Расписание"))
+            .category(ParameterItem(title: "edit_tracker.category".localized)),
+            .schedule(ParameterItem(title: "edit_tracker.schedule".localized))
         ]),
         .customization
     ]
@@ -109,6 +142,19 @@ final class NewTrackerViewController: UIViewController {
         super.viewDidLoad()
         configDependencies()
         setupUI()
+    }
+    
+    // MARK: - Public Methods
+    
+    func setTitles(navigationTitle: String, createButtonTitle: String) {
+        navigationItem.title = navigationTitle
+        createButton.setTitle(createButtonTitle, for: .normal)
+    }
+    
+    func setQuantityForEditTracker(_ quantityString: String) {
+        topSpacerView.isHidden = false
+        quantityLabel.isHidden = false
+        quantityLabel.text = quantityString
     }
     
     // MARK: - Configure Dependencies
@@ -123,10 +169,10 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - Setup UI
     
-    private func setupUI() {
+    func setupUI() {
         view.backgroundColor = .ypWhite
         view.addSubviews([
-            tableView,
+            vStackView,
             buttonStackView
         ])
         
@@ -136,7 +182,6 @@ final class NewTrackerViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        navigationItem.title = "Новая привычка"
         navigationController?.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor.ypBlack,
             .font: UIFont.systemFont(ofSize: 16, weight: .medium)
@@ -147,15 +192,15 @@ final class NewTrackerViewController: UIViewController {
     
     private func setupConstraints() {
         [
-            tableView,
+            vStackView,
             buttonStackView
         ].disableAutoresizingMasks()
         
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: buttonStackView.topAnchor, constant: -16),
+            vStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            vStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            vStackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            vStackView.bottomAnchor.constraint(equalTo: buttonStackView.topAnchor, constant: -16),
             
             buttonStackView.heightAnchor.constraint(equalToConstant: 60),
             buttonStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
@@ -182,8 +227,7 @@ final class NewTrackerViewController: UIViewController {
         dismiss(animated: true)
     }
     
-    @objc private func didTapCreateButton() {
-        delegate?.createTracker(from: state)
+    @objc func didTapCreateButton() {
         dismiss(animated: true)
     }
     
@@ -198,11 +242,13 @@ final class NewTrackerViewController: UIViewController {
     
     private func pushToScheduleVC() {
         guard let scheduleVC = scheduleVC else { return }
+        scheduleVC.configure(with: state.schedule)
         navigationController?.pushViewController(scheduleVC, animated: true)
     }
     
     private func pushToCategoryListVC() {
         guard let categoryListVC = categoryListVC else { return }
+        categoryListVC.configure(selectedCategory: state.category)
         navigationController?.pushViewController(categoryListVC, animated: true)
     }
     
@@ -212,6 +258,7 @@ final class NewTrackerViewController: UIViewController {
             return UITableViewCell()
         }
         cell.delegate = self
+        cell.configure(with: state.title)
         
         return cell
     }
@@ -232,6 +279,7 @@ final class NewTrackerViewController: UIViewController {
             return UITableViewCell()
         }
         cell.delegate = self
+        cell.configure(emoji: state.emoji, color: state.color)
         
         return cell
     }
@@ -320,7 +368,7 @@ final class NewTrackerViewController: UIViewController {
 
 // MARK: - UITableViewDataSource
 
-extension NewTrackerViewController: UITableViewDataSource {
+extension BaseEditTrackerViewController: UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
         sections.count
@@ -349,7 +397,7 @@ extension NewTrackerViewController: UITableViewDataSource {
 
 // MARK: - UITableViewDelegate
 
-extension NewTrackerViewController: UITableViewDelegate {
+extension BaseEditTrackerViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch sections[indexPath.section] {
@@ -397,7 +445,7 @@ extension NewTrackerViewController: UITableViewDelegate {
 
 // MARK: - EnterNameCellDelegate
 
-extension NewTrackerViewController: EnterNameCellDelegate {
+extension BaseEditTrackerViewController: EnterNameCellDelegate {
     
     func enterNameCell(didChangeText text: String) {
         updateStateTitle(text)
@@ -412,7 +460,7 @@ extension NewTrackerViewController: EnterNameCellDelegate {
 
 // MARK: - ScheduleViewControllerDelegate
 
-extension NewTrackerViewController: ScheduleViewControllerDelegate {
+extension BaseEditTrackerViewController: ScheduleViewControllerDelegate {
     
     func getConfiguredSchedule(_ schedule: Set<Weekday>) {
         updateStateSchedule(schedule)
@@ -423,7 +471,7 @@ extension NewTrackerViewController: ScheduleViewControllerDelegate {
 
 // MARK: - CustomizationCellDelegate
 
-extension NewTrackerViewController: CustomizationCellDelegate {
+extension BaseEditTrackerViewController: CustomizationCellDelegate {
     
     func customizationCell(didChangeEmoji emoji: String) {
         updateStateEmoji(emoji)
@@ -437,7 +485,7 @@ extension NewTrackerViewController: CustomizationCellDelegate {
 
 // MARK: - CategoryListViewControllerDelegate
 
-extension NewTrackerViewController: CategoryListViewControllerDelegate {
+extension BaseEditTrackerViewController: CategoryListViewControllerDelegate {
     
     func categoryListVC(didSelectCategory category: TrackerCategory) {
         updateStateCategory(category)

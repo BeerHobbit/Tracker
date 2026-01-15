@@ -19,7 +19,7 @@ final class ScheduleViewController: UIViewController {
     
     private lazy var readyButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Готово", for: .normal)
+        button.setTitle("schedule.ready_button".localized, for: .normal)
         button.setTitleColor(.ypWhite, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .ypBlack
@@ -43,6 +43,13 @@ final class ScheduleViewController: UIViewController {
         setupUI()
     }
     
+    // MARK: - Public Methods
+    
+    func configure(with schedule: Set<Weekday>) {
+        chosenWeekdays = schedule
+        scheduleTableView.reloadData()
+    }
+    
     // MARK: - Configure Dependencies
     
     private func configDependencies() {
@@ -64,7 +71,7 @@ final class ScheduleViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        navigationItem.title = "Расписание"
+        navigationItem.title = "schedule.navigation_title".localized
         navigationController?.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor.ypBlack,
             .font: UIFont.systemFont(ofSize: 16, weight: .medium)

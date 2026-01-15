@@ -24,7 +24,7 @@ final class OnboardingPageViewController: UIPageViewController {
     
     private lazy var finishButton: UIButton = {
         let button = UIButton()
-        button.setTitle("Вот это технологии!", for: .normal)
+        button.setTitle("onboarding_page.finish_button".localized, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         
         let white: UIColor = .ypWhite.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))

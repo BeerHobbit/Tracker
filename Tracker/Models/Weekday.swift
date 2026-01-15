@@ -10,25 +10,25 @@ enum Weekday: Int, CaseIterable, Codable {
     
     var shortString: String {
         switch self {
-        case .sunday: return "Вс"
-        case .monday: return "Пн"
-        case .tuesday: return "Вт"
-        case .wednesday: return "Ср"
-        case .thursday: return "Чт"
-        case .friday: return "Пт"
-        case .saturday: return "Сб"
+        case .sunday: return "weekday.short_sunday".localized
+        case .monday: return "weekday.short_monday".localized
+        case .tuesday: return "weekday.short_tuesday".localized
+        case .wednesday: return "weekday.short_wednesday".localized
+        case .thursday: return "weekday.short_thursday".localized
+        case .friday: return "weekday.short_friday".localized
+        case .saturday: return "weekday.short_saturday".localized
         }
     }
     
     var longString: String {
         switch self {
-        case .sunday: return "Воскресенье"
-        case .monday: return "Понедельник"
-        case .tuesday: return "Вторник"
-        case .wednesday: return "Среда"
-        case .thursday: return "Четверг"
-        case .friday: return "Пятница"
-        case .saturday: return "Суббота"
+        case .sunday: return "weekday.long_sunday".localized
+        case .monday: return "weekday.long_monday".localized
+        case .tuesday: return "weekday.long_tuesday".localized
+        case .wednesday: return "weekday.long_wednesday".localized
+        case .thursday: return "weekday.long_thursday".localized
+        case .friday: return "weekday.long_friday".localized
+        case .saturday: return "weekday.long_saturday".localized
         }
     }
     
@@ -44,7 +44,7 @@ enum Weekday: Int, CaseIterable, Codable {
     
     static func formattedWeekdays(_ days: [Weekday]) -> String {
         guard !days.isEmpty else { return "" }
-        guard !(days.count == allCases.count) else { return "Каждый день" }
+        guard !(days.count == allCases.count) else { return "weekday.every_day".localized }
         
         let orderedDays = ordered.filter { days.contains($0) }
         let orderedDaysString = orderedDays.map { $0.shortString }.joined(separator: ", ")

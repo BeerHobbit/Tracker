@@ -2,6 +2,8 @@ import UIKit
 
 final class CategoryCell: BaseTableViewCell {
     
+    // MARK: - Identifier
+    
     static let reuseID = "CategoryCellReuseIdentifier"
     
     // MARK: - Views

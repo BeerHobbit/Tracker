@@ -1,0 +1,101 @@
+// Tracker List
+
+"tracker_list.navigation_title" = "Trackers";
+"tracker_list.search_placeholder" = "Search";
+"tracker_list.filters" = "Filters";
+"tracker_list.empty_state" = "What will we track?";
+"tracker_list.search_empty" = "Nothing found";
+
+"tracker_list.edit_action" = "Edit";
+"tracker_list.delete_action" = "Delete";
+
+"tracker_list.delete_alert_message" = "Remove this tracker?";
+"tracker_list.delete_alert_cancel" = "Cancel";
+
+"tracker_list.future_date_alert_title" = "Won't work";
+"tracker_list.future_date_alert_message" = "You can't complete tracker for a future date";
+"tracker_list.future_date_alert_action" = "OK";
+
+// Main TabBar
+
+"main_tabbar.trackers_tab" = "Trackers";
+"main_tabbar.statistics_tab" = "Statistics";
+
+// Statistics
+
+"statistics.navigation_title" = "Statistics";
+"statistics.records_count_subtitle" = "Trackers completed";
+"statistics.empty_statistics" = "Nothing to analyze yet";
+
+// Onboarding
+
+"onboarding_page.finish_button" = "Now that’s technology!";
+"onboarding_page.about_tracking" = "Track only what you want";
+"onboarding_page.about_water_and_yoga" = "Even if it’s not water or yoga";
+
+// Edit Tracker
+
+"new_tracker.navigation_title" = "Create Tracker";
+"new_tracker.create_button" = "Create";
+
+"edit_tracker.navigation_title" = "Edit Tracker";
+"edit_tracker.create_button" = "Save";
+
+"edit_tracker.cancel_button" = "Cancel";
+"edit_tracker.category" = "Сategory";
+"edit_tracker.schedule" = "Schedule";
+
+// Customization
+
+"customization.emoji_section" = "Emoji";
+"customization.color_section" = "Color";
+
+// Enter Name
+
+"enter_name.placeholder" = "Enter tracker name";
+"enter_name.error" = "Maximum %d characters";
+"enter_new_category.placeholder" = "Enter category name";
+
+// Schedule
+
+"schedule.navigation_title" = "Schedule";
+"schedule.ready_button" = "Done";
+
+// Filter Screen
+
+"filter_screen.navigation_title" = "Filters";
+"filter_screen.all" = "All trackers";
+"filter_screen.today" = "Trackers for today";
+"filter_screen.completed" = "Completed";
+"filter_screen.unfinished" = "Unfinished";
+
+// Category List
+
+"category_list.navigation_title" = "Category";
+"category_list.empty_state" = "Trackers and events can be grouped by meaning";
+"category_list.add_category_button" = "Add category";
+
+// New Category
+
+"new_category.navigation_title" = "New Category";
+"new_category.ready_button" = "Done";
+
+// Weekday
+
+"weekday.every_day" = "Every day";
+
+"weekday.long_sunday" = "Sunday";
+"weekday.long_monday" = "Monday";
+"weekday.long_tuesday" = "Tuesday";
+"weekday.long_wednesday" = "Wednesday";
+"weekday.long_thursday" = "Thursday";
+"weekday.long_friday" = "Friday";
+"weekday.long_saturday" = "Saturday";
+
+"weekday.short_sunday" = "Sun";
+"weekday.short_monday" = "Mon";
+"weekday.short_tuesday" = "Tue";
+"weekday.short_wednesday" = "Wed";
+"weekday.short_thursday" = "Thu";
+"weekday.short_friday" = "Fri";
+"weekday.short_saturday" = "Sat";

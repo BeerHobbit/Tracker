@@ -51,6 +51,7 @@ class BaseTableViewCell: UITableViewCell {
     
     func setupUI() {
         selectionStyle = .none
+        contentView.backgroundColor = .ypWhite
         setupSubviews()
         setupConstraints()
     }
