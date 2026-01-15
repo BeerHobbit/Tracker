@@ -2,31 +2,6 @@ import AppMetricaCore
 
 struct AnalyticsService {
     
-    // MARK: - Types
-    
-    enum Event: String {
-        case open
-        case close
-        case click
-    }
-    
-    enum Parameter: String {
-        case screen
-        case item
-    }
-    
-    enum Screen: String {
-        case trackerList = "TrackerListViewController"
-    }
-    
-    enum Item: String {
-        case addTrack = "add_track"
-        case track
-        case filter
-        case edit
-        case delete
-    }
-    
     // MARK: - Public Methods
     
     static func activate() {
@@ -38,15 +13,15 @@ struct AnalyticsService {
         AppMetrica.activate(with: configuration)
     }
     
-    func report(event: Event, screen: Screen, item: Item?) {
+    func report(event: AnalyticsEvent, screen: AnalyticsScreen, item: AnalyticsItem?) {
         var params: [AnyHashable: Any] = [
-            Parameter.screen.rawValue: screen.rawValue
+            AnalyticsParameter.screen.rawValue: screen.rawValue
         ]
         switch event {
         case .open, .close: break
         case .click:
             if let item {
-                params[Parameter.item.rawValue] = item.rawValue
+                params[AnalyticsParameter.item.rawValue] = item.rawValue
             }
         }
         
@@ -63,7 +38,7 @@ struct AnalyticsService {
     
     // MARK: - Private Methods
     
-    private func log(event: Event, screen: Screen, item: Item?) {
+    private func log(event: AnalyticsEvent, screen: AnalyticsScreen, item: AnalyticsItem?) {
         let itemString = item?.rawValue ?? "nil"
         print("""
             📊[AppMetrica]

@@ -1,5 +1,4 @@
 enum FilterType {
-    
     case allTrackers
     case todayTrackers
     case completedTrackers
@@ -13,5 +12,4 @@ enum FilterType {
         case .unfinishedTrackers: return "filter_screen.unfinished".localized
         }
     }
-    
 }
