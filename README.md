@@ -1,5 +1,12 @@
 # Tracker
 
+<p align="center">
+    <img src="Screenshots/MainScreen.png" width="200"/>
+    <img src="Screenshots/CreateTracker.png" width="200"/>
+    <img src="Screenshots/Onboarding.png" width="200"/>
+    <img src="Screenshots/Statistics.png" width="200"/>
+</p>
+
 ## Описание
 
 Tracker — это iOS-приложение, которое помогает пользователю формировать полезные привычки и отслеживать их выполнение.
